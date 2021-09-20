@@ -1,3 +1,20 @@
 <resources>
-    <string name="app_name">Android Floating Music</string>
+    <string name="app_name">Floating Music</string>
+
+    <string name="alert_overlay_permission_title">Display over other apps</string>
+    <string name="alert_overlay_permission_message">To use the floating music control, allow \"Allow display over other apps\".</string>
+    <string name="alert_overlay_permission_btn_positive">Setting</string>
+    <string name="alert_overlay_permission_btn_negative">Cancel</string>
+    <string name="alert_notification_permission_title">Notification access</string>
+    <string name="alert_notification_permission_message">To use the floating music control, Allow \"Floating Music\" on Notification access.</string>
+    <string name="alert_notification_permission_btn_positive">Setting</string>
+    <string name="alert_notification_permission_btn_negative">Cancel</string>
+
+    <string name="msg_need_to_play">Please play a music on the other apps.</string>
+
+    <string name="des_floating_playing_image">Album art</string>
+    <string name="des_floating_button_play">Play button</string>
+    <string name="des_floating_button_prev">Skip previous button</string>
+    <string name="des_floating_button_next">Skip next button</string>
+    <string name="des_floating_button_close">Close button</string>
 </resources>

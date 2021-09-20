@@ -1,0 +1,20 @@
+<resources>
+    <string name="app_name">플로팅 뮤직</string>
+
+    <string name="alert_overlay_permission_title">다른 앱 위에 표시 권한</string>
+    <string name="alert_overlay_permission_message">플로팅 음악 컨트롤을 사용하기 위하여 \"다른 앱 위에 표시 허용\"을 켜 주세요.</string>
+    <string name="alert_overlay_permission_btn_positive">설정</string>
+    <string name="alert_overlay_permission_btn_negative">취소</string>
+    <string name="alert_notification_permission_title">알림 액세스 권한</string>
+    <string name="alert_notification_permission_message">플로팅 음악 컨트롤을 사용하기 위하여 \"알림 엑세스 허용\"을 켜 주세요.</string>
+    <string name="alert_notification_permission_btn_positive">설정</string>
+    <string name="alert_notification_permission_btn_negative">취소</string>
+
+    <string name="msg_need_to_play">음악 앱에서 먼저 재생 해 주세요.</string>
+
+    <string name="des_floating_playing_image">재생 앨범 아트</string>
+    <string name="des_floating_button_play">재생 버튼</string>
+    <string name="des_floating_button_prev">이전 곡 버튼</string>
+    <string name="des_floating_button_next">다음 곡 버튼</string>
+    <string name="des_floating_button_close">종료 버튼</string>
+</resources>
