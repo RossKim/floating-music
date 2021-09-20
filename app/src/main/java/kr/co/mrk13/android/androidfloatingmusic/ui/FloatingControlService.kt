@@ -1,11 +1,16 @@
 package kr.co.mrk13.android.androidfloatingmusic.ui
 
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.ComponentName
 import android.content.Intent
+import android.content.SharedPreferences
 import android.graphics.PixelFormat
+import android.graphics.Point
+import android.graphics.Rect
+import android.os.Build
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
@@ -24,6 +29,7 @@ import kr.co.mrk13.android.androidfloatingmusic.model.MusicData
 import kr.co.mrk13.android.androidfloatingmusic.receiver.ActiveSessionsChangedListener
 import kr.co.mrk13.android.androidfloatingmusic.util.Log
 import kr.co.mrk13.android.androidfloatingmusic.util.convertDp2Px
+import java.util.prefs.Preferences
 import kotlin.math.abs
 import kotlin.math.max
 
@@ -113,6 +119,11 @@ class FloatingControlService : NotificationListenerService(), LifecycleOwner,
     private var isForeground = false
     private val handler = Handler(Looper.getMainLooper())
 
+    private val pref: SharedPreferences
+        get() {
+            return getSharedPreferences("floating-music-pref", Activity.MODE_PRIVATE)
+        }
+
     override fun onBind(intent: Intent?): IBinder? {
         return null
     }
@@ -188,10 +199,22 @@ class FloatingControlService : NotificationListenerService(), LifecycleOwner,
         // This problem is solved later.
         // 5) Next parameter is Layout_Format. System chooses a format that supports
         // translucency by PixelFormat.TRANSLUCENT
-        val windowWidth = max(
+        var windowWidth = max(
             convertDp2Px(Constant.controlWindowMinimumSize, applicationContext),
             width * 0.3f
         ).toInt()
+        var posX = 0
+        var posY = 0
+        var gravity = Gravity.CENTER
+
+        pref.getString(Constant.prefWindowPosition, null)?.let {
+            Rect.unflattenFromString(it)
+        }?.let {
+            posX = it.left
+            posY = it.top
+            windowWidth = it.width()
+            gravity = Gravity.NO_GRAVITY
+        }
         floatWindowLayoutParam = WindowManager.LayoutParams(
             windowWidth,
             windowWidth,
@@ -206,9 +229,9 @@ class FloatingControlService : NotificationListenerService(), LifecycleOwner,
         // The Gravity of the Floating Window is set.
         // The Window will appear in the center of the screen
         floatWindowLayoutParam?.apply {
-            gravity = Gravity.CENTER
-            x = 0
-            y = 0
+            this.gravity = gravity
+            x = posX
+            y = posY
         }
 
         // The ViewGroup that inflates the floating_layout.xml is
@@ -492,6 +515,11 @@ class FloatingControlService : NotificationListenerService(), LifecycleOwner,
                             }
                             MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
                                 resizeMode = null
+
+                                val rect = Rect(it.x, it.y, it.x + it.width, it.y + it.height)
+                                val pref = this@FloatingControlService.pref.edit()
+                                pref.putString(Constant.prefWindowPosition, rect.flattenToString())
+                                pref.apply()
                             }
                             else -> {
 

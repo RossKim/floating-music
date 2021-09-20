@@ -11,6 +11,8 @@ class Constant {
 
         const val controlWindowMinimumSize = 200
         const val resizeThreshold = 60
+
+        const val prefWindowPosition = "pref-window-pos"
     }
 }
 
