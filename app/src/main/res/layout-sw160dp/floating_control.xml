@@ -106,20 +106,28 @@
             </RelativeLayout>
         </LinearLayout>
 
-        <RelativeLayout
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="2dp"
             android:layout_alignParentBottom="true"
-            android:background="#99FFFFFF">
+            android:background="@color/color_slider_background"
+            android:orientation="horizontal">
 
             <View
                 android:id="@+id/time_slider"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
-                android:background="#FFFFFFFF"
-                tools:layout_width="20dp" />
+                android:layout_weight=".40"
+                android:background="@color/color_slider_primary" />
 
-        </RelativeLayout>
+            <View
+                android:id="@+id/time_slider_holder"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight=".60"
+                android:background="@android:color/transparent" />
+
+        </LinearLayout>
 
 
         <TextView

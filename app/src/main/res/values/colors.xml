@@ -9,4 +9,7 @@
     <color name="color_primary_dark">@color/color_primary</color>
     <color name="color_secondary">#FF096192</color>
     <color name="color_control">@color/white</color>
+
+    <color name="color_slider_background">#7FFFFFFF</color>
+    <color name="color_slider_primary">#99F5DF4D</color>
 </resources>

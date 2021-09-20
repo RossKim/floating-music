@@ -12,6 +12,7 @@ import android.os.Looper
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
 import android.view.*
+import android.widget.LinearLayout
 import androidx.core.app.NotificationCompat
 import androidx.lifecycle.*
 import com.bumptech.glide.Glide
@@ -26,23 +27,66 @@ import kr.co.mrk13.android.androidfloatingmusic.util.convertDp2Px
 import kotlin.math.abs
 import kotlin.math.max
 
-var notificationId = 1
-
 enum class ResizeMode {
     BottomLeft, BottomRight
 }
 
-interface MusicDataViewModel {
-    val musicData: LiveData<MusicData?>
-    fun musicDataChange(data: MusicData?)
+interface MusicDataViewModelObserver {
+    fun onMusicDataChange(data: MusicData?)
+    fun onPlayingStateChange(data: MusicData?)
 }
 
-class FloatingControlServiceViewModel : ViewModel(), MusicDataViewModel {
-    private val mutableMusicData = MutableLiveData<MusicData?>()
-    override val musicData: LiveData<MusicData?> get() = mutableMusicData
+interface MusicDataViewModel {
+    val musicData: MusicData?
+    fun musicDataChange(data: MusicData?)
+
+    val musicPlayingStateData: MusicData?
+    fun playingStateChange(data: MusicData?)
+
+    fun addObserver(observer: MusicDataViewModelObserver)
+    fun removeObserver(observer: MusicDataViewModelObserver)
+}
+
+class FloatingControlServiceViewModel : MusicDataViewModel {
+    private val lock = Any()
+    private val observers = ArrayList<MusicDataViewModelObserver>()
+
+    private var mutableMusicData: MusicData? = null
+        set(value) {
+            field = value
+            observers.forEach { it.onMusicDataChange(value) }
+        }
+    override val musicData: MusicData? get() = mutableMusicData
+
+    private var mutableMusicPlayingStateData: MusicData? = null
+        set(value) {
+            field = value
+            observers.forEach { it.onPlayingStateChange(value) }
+        }
+    override val musicPlayingStateData: MusicData? get() = mutableMusicPlayingStateData
 
     override fun musicDataChange(data: MusicData?) {
-        mutableMusicData.value = data
+        synchronized(lock) {
+            mutableMusicData = data
+        }
+    }
+
+    override fun playingStateChange(data: MusicData?) {
+        synchronized(lock) {
+            mutableMusicPlayingStateData = data
+        }
+    }
+
+    override fun addObserver(observer: MusicDataViewModelObserver) {
+        if (!observers.contains(observer)) {
+            observers.add(observer)
+        }
+    }
+
+    override fun removeObserver(observer: MusicDataViewModelObserver) {
+        if (observers.contains(observer)) {
+            observers.remove(observer)
+        }
     }
 }
 
@@ -52,7 +96,8 @@ class FloatingControlServiceViewModel : ViewModel(), MusicDataViewModel {
  *
  * @see https://stackoverflow.com/questions/59052978/is-there-any-way-to-fetch-the-info-of-the-current-playing-song
  */
-class FloatingControlService : NotificationListenerService(), LifecycleOwner {
+class FloatingControlService : NotificationListenerService(), LifecycleOwner,
+    MusicDataViewModelObserver {
 
     private var floatView: ViewGroup? = null
     private var LAYOUT_TYPE = 0
@@ -63,7 +108,7 @@ class FloatingControlService : NotificationListenerService(), LifecycleOwner {
     private val binding get() = mBinding!!
 
     private val viewModel = FloatingControlServiceViewModel()
-    private val sessionsChangeListener = ActiveSessionsChangedListener(this, viewModel)
+    private lateinit var sessionsChangeListener: ActiveSessionsChangedListener
     private lateinit var lifecycleRegistry: LifecycleRegistry
     private var isForeground = false
     private val handler = Handler(Looper.getMainLooper())
@@ -74,6 +119,9 @@ class FloatingControlService : NotificationListenerService(), LifecycleOwner {
 
     override fun onCreate() {
         super.onCreate()
+
+        sessionsChangeListener =
+            ActiveSessionsChangedListener(this, viewModel, sessionComponentName)
 
         if (!isForeground) {
             isForeground = true
@@ -148,7 +196,7 @@ class FloatingControlService : NotificationListenerService(), LifecycleOwner {
             windowWidth,
             windowWidth,
             LAYOUT_TYPE,
-            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
+            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE.or(WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL),
             PixelFormat.TRANSLUCENT
         )
 
@@ -194,6 +242,7 @@ class FloatingControlService : NotificationListenerService(), LifecycleOwner {
     override fun onDestroy() {
         lifecycleRegistry.currentState = Lifecycle.State.DESTROYED
         mBinding = null
+        viewModel.removeObserver(this)
         sessionsChangeListener.deregisterObserver()
         isForeground = false
         super.onDestroy()
@@ -211,7 +260,7 @@ class FloatingControlService : NotificationListenerService(), LifecycleOwner {
         val channel = NotificationChannel(
             channelId,
             getString(R.string.app_name),
-            NotificationManager.IMPORTANCE_DEFAULT
+            NotificationManager.IMPORTANCE_LOW
         )
         (getSystemService(NOTIFICATION_SERVICE) as NotificationManager).createNotificationChannel(
             channel
@@ -221,8 +270,7 @@ class FloatingControlService : NotificationListenerService(), LifecycleOwner {
             .setContentText("")
             .setSilent(true)
             .build()
-        startForeground(notificationId, notification)
-        notificationId += 1
+        startForeground(920, notification)
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -258,17 +306,19 @@ class FloatingControlService : NotificationListenerService(), LifecycleOwner {
         floatView?.setOnTouchListener(windowTouch)
     }
 
-    private fun observePlayer() {
-        val listener = ComponentName(this, FloatingControlService::class.java)
-        sessionsChangeListener.registerObserver(listener)
-
-        viewModel.musicData.observe(this) {
-            setMusicDataToUI(it)
+    private val sessionComponentName: ComponentName
+        get() {
+            return ComponentName(this, FloatingControlService::class.java)
         }
+
+    private fun observePlayer() {
+        viewModel.addObserver(this)
+
+        sessionsChangeListener.registerObserver()
     }
 
     private fun sendCommand(command: MediaCommand) {
-        viewModel.musicData.value?.controller?.get()?.let {
+        viewModel.musicData?.getController(this, sessionComponentName)?.let {
             when (command) {
                 MediaCommand.PLAY -> it.transportControls.play()
                 MediaCommand.PAUSE -> it.transportControls.pause()
@@ -282,8 +332,6 @@ class FloatingControlService : NotificationListenerService(), LifecycleOwner {
         musicData?.let { data ->
             binding.artistText?.text = data.artistName
             binding.songText?.text = data.trackTitle
-            binding.playButton.isSelected = data.playing
-            binding.timePositionText.text = positionToText(data.playingPosition)
             binding.timeDurationText.text = positionToText(data.duration)
             data.albumUrl?.let { pair ->
                 pair.second?.let {
@@ -310,8 +358,6 @@ class FloatingControlService : NotificationListenerService(), LifecycleOwner {
         } ?: run {
             binding.artistText?.text = getString(R.string.msg_need_to_play)
             binding.songText?.text = null
-            binding.playButton.isSelected = false
-            binding.timePositionText.text = ""
             binding.timeDurationText.text = ""
             binding.backgroundImage.tag = null
             Glide.with(this).clear(binding.backgroundImage)
@@ -351,6 +397,27 @@ class FloatingControlService : NotificationListenerService(), LifecycleOwner {
         super.onNotificationPosted(sbn)
         sbn?.packageName?.run {
             Log.v("onNotificationPosted() --> packageName: $this")
+        }
+    }
+
+    override fun onMusicDataChange(data: MusicData?) {
+        setMusicDataToUI(data)
+    }
+
+    override fun onPlayingStateChange(data: MusicData?) {
+        binding.playButton.isSelected = data?.playing ?: false
+        binding.timePositionText.text = positionToText(data?.playingPosition ?: -1)
+        data?.playingPosition?.let { pos ->
+            if (pos >= 0 && data.duration > 0) {
+                val progress = (pos.toDouble() / data.duration).toFloat()
+                (binding.timeSlider.layoutParams as? LinearLayout.LayoutParams)?.weight =
+                    progress
+                (binding.timeSliderHolder.layoutParams as? LinearLayout.LayoutParams)?.weight =
+                    1 - progress
+            }
+        } ?: run {
+            (binding.timeSlider.layoutParams as? LinearLayout.LayoutParams)?.weight = 0f
+            (binding.timeSliderHolder.layoutParams as? LinearLayout.LayoutParams)?.weight = 1f
         }
     }
 

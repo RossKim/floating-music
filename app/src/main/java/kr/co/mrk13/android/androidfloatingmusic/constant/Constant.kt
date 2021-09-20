@@ -10,7 +10,7 @@ class Constant {
         const val notificationChannelId = "android-floating-music-noc"
 
         const val controlWindowMinimumSize = 200
-        const val resizeThreshold = 40
+        const val resizeThreshold = 60
     }
 }
 
