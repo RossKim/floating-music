@@ -8,9 +8,7 @@ import android.content.ComponentName
 import android.content.Intent
 import android.content.SharedPreferences
 import android.graphics.PixelFormat
-import android.graphics.Point
 import android.graphics.Rect
-import android.os.Build
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
@@ -29,9 +27,10 @@ import kr.co.mrk13.android.androidfloatingmusic.model.MusicData
 import kr.co.mrk13.android.androidfloatingmusic.receiver.ActiveSessionsChangedListener
 import kr.co.mrk13.android.androidfloatingmusic.util.Log
 import kr.co.mrk13.android.androidfloatingmusic.util.convertDp2Px
-import java.util.prefs.Preferences
+import kr.co.mrk13.android.androidfloatingmusic.util.convertPx2Dp
 import kotlin.math.abs
 import kotlin.math.max
+import kotlin.math.min
 
 enum class ResizeMode {
     BottomLeft, BottomRight
@@ -200,9 +199,13 @@ class FloatingControlService : NotificationListenerService(), LifecycleOwner,
         // 5) Next parameter is Layout_Format. System chooses a format that supports
         // translucency by PixelFormat.TRANSLUCENT
         var windowWidth = max(
-            convertDp2Px(Constant.controlWindowMinimumSize, applicationContext),
-            width * 0.3f
+            min(
+                convertDp2Px(Constant.controlWindowDefaultSize, applicationContext),
+                width * 0.3f
+            ),
+            convertDp2Px(Constant.controlWindowMinimumSize, applicationContext)
         ).toInt()
+        var windowHeight = windowWidth
         var posX = 0
         var posY = 0
         var gravity = Gravity.CENTER
@@ -213,11 +216,12 @@ class FloatingControlService : NotificationListenerService(), LifecycleOwner,
             posX = it.left
             posY = it.top
             windowWidth = it.width()
+            windowHeight = it.height()
             gravity = Gravity.NO_GRAVITY
         }
         floatWindowLayoutParam = WindowManager.LayoutParams(
             windowWidth,
-            windowWidth,
+            windowHeight,
             LAYOUT_TYPE,
             WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE.or(WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL),
             PixelFormat.TRANSLUCENT
@@ -240,6 +244,7 @@ class FloatingControlService : NotificationListenerService(), LifecycleOwner,
         // The ViewGroup that inflates the floating_layout.xml is
         // added to the WindowManager with all the parameters
         windowManager?.addView(floatView, floatWindowLayoutParam)
+        setUIVisibility(windowWidth, windowHeight)
 
         lifecycleRegistry = LifecycleRegistry(this)
         lifecycleRegistry.currentState = Lifecycle.State.CREATED
@@ -270,6 +275,7 @@ class FloatingControlService : NotificationListenerService(), LifecycleOwner,
         isForeground = false
         super.onDestroy()
         stopSelf()
+        floatView?.removeOnLayoutChangeListener(windowLayoutChange)
         // Window is removed from the screen
         windowManager?.removeView(floatView)
     }
@@ -327,6 +333,31 @@ class FloatingControlService : NotificationListenerService(), LifecycleOwner,
         // Another feature of the floating window is, the window is movable.
         // The window can be moved at any position on the screen.
         floatView?.setOnTouchListener(windowTouch)
+
+        floatView?.addOnLayoutChangeListener(windowLayoutChange)
+    }
+
+    private fun setUIVisibility(width: Int, height: Int) {
+        val widthDP = convertPx2Dp(width, this)
+        val heightDP = convertPx2Dp(height, this)
+        if (widthDP >= 150) {
+            binding.timePositionText.visibility = View.VISIBLE
+            binding.timeDurationText.visibility = View.VISIBLE
+            binding.prevButton.visibility = View.VISIBLE
+            binding.nextButton.visibility = View.VISIBLE
+        } else {
+            binding.prevButton.visibility = if (widthDP >= 120) View.VISIBLE else View.GONE
+            binding.nextButton.visibility = if (widthDP >= 120) View.VISIBLE else View.GONE
+            binding.timePositionText.visibility = View.GONE
+            binding.timeDurationText.visibility = View.GONE
+        }
+        if (heightDP >= 120) {
+            binding.artistText.maxLines = 2
+            binding.songText.maxLines = 2
+        } else {
+            binding.artistText.maxLines = 1
+            binding.songText.maxLines = 1
+        }
     }
 
     private val sessionComponentName: ComponentName
@@ -353,8 +384,8 @@ class FloatingControlService : NotificationListenerService(), LifecycleOwner,
 
     private fun setMusicDataToUI(musicData: MusicData?) {
         musicData?.let { data ->
-            binding.artistText?.text = data.artistName
-            binding.songText?.text = data.trackTitle
+            binding.artistText.text = data.artistName
+            binding.songText.text = data.trackTitle
             binding.timeDurationText.text = positionToText(data.duration)
             data.albumUrl?.let { pair ->
                 pair.second?.let {
@@ -379,8 +410,8 @@ class FloatingControlService : NotificationListenerService(), LifecycleOwner,
                 Glide.with(this).clear(binding.backgroundImage)
             }
         } ?: run {
-            binding.artistText?.text = getString(R.string.msg_need_to_play)
-            binding.songText?.text = null
+            binding.artistText.text = getString(R.string.msg_need_to_play)
+            binding.songText.text = null
             binding.timeDurationText.text = ""
             binding.backgroundImage.tag = null
             Glide.with(this).clear(binding.backgroundImage)
@@ -493,7 +524,11 @@ class FloatingControlService : NotificationListenerService(), LifecycleOwner,
                                                 minimumWidth,
                                                 (moveWidth + event.rawX - movePx)
                                             ).toInt()
-                                        it.height = it.width
+                                        it.height =
+                                            max(
+                                                minimumWidth,
+                                                (moveHeight + event.rawY - movePy)
+                                            ).toInt()
                                     }
                                     ResizeMode.BottomLeft -> {
                                         it.width =
@@ -501,7 +536,11 @@ class FloatingControlService : NotificationListenerService(), LifecycleOwner,
                                                 minimumWidth,
                                                 (moveWidth + movePx - event.rawX)
                                             ).toInt()
-                                        it.height = it.width
+                                        it.height =
+                                            max(
+                                                minimumWidth,
+                                                (moveHeight + movePy - event.rawY)
+                                            ).toInt()
                                     }
                                     null -> {
                                         it.x = (moveX + event.rawX - movePx).toInt()
@@ -531,4 +570,11 @@ class FloatingControlService : NotificationListenerService(), LifecycleOwner,
             }
         }
     }
+
+    private val windowLayoutChange =
+        View.OnLayoutChangeListener { v, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom ->
+            if (bottom - top != oldBottom - oldTop || right - left != oldRight - oldLeft) {
+                setUIVisibility(right - left, bottom - top)
+            }
+        }
 }
