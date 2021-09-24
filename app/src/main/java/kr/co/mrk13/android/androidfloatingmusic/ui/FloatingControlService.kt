@@ -28,6 +28,7 @@ import kr.co.mrk13.android.androidfloatingmusic.receiver.ActiveSessionsChangedLi
 import kr.co.mrk13.android.androidfloatingmusic.util.Log
 import kr.co.mrk13.android.androidfloatingmusic.util.convertDp2Px
 import kr.co.mrk13.android.androidfloatingmusic.util.convertPx2Dp
+import java.lang.ref.WeakReference
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
@@ -133,13 +134,39 @@ class FloatingControlService : NotificationListenerService(), LifecycleOwner,
         sessionsChangeListener =
             ActiveSessionsChangedListener(this, viewModel, sessionComponentName)
 
+        Log.d("onCreate: $isForeground")
         if (!isForeground) {
             isForeground = true
-            handler.postDelayed({
-                startForeground()
-            }, 1000)
+            startForeground()
         }
 
+        initWindow()
+    }
+
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        Log.d("onStartCommand: $isForeground")
+        if (!isForeground) {
+            isForeground = true
+            startForeground()
+            initWindow()
+        }
+        return super.onStartCommand(intent, flags, startId)
+    }
+
+    // It is called when stopService()
+    // method is called in MainActivity
+    override fun onDestroy() {
+        super.onDestroy()
+        stopSelf()
+        isForeground = false
+        clear()
+    }
+
+    override fun getLifecycle(): Lifecycle {
+        return lifecycleRegistry
+    }
+
+    private fun initWindow() {
         // The screen height and width are calculated, cause
         // the height and width of the floating window is set depending on this
 
@@ -255,33 +282,15 @@ class FloatingControlService : NotificationListenerService(), LifecycleOwner,
         observePlayer()
     }
 
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        if (!isForeground) {
-            isForeground = true
-            handler.postDelayed({
-                startForeground()
-            }, 1000)
-        }
-        return super.onStartCommand(intent, flags, startId)
-    }
-
-    // It is called when stopService()
-    // method is called in MainActivity
-    override fun onDestroy() {
+    private fun clear() {
         lifecycleRegistry.currentState = Lifecycle.State.DESTROYED
         mBinding = null
         viewModel.removeObserver(this)
         sessionsChangeListener.deregisterObserver()
-        isForeground = false
-        super.onDestroy()
-        stopSelf()
         floatView?.removeOnLayoutChangeListener(windowLayoutChange)
         // Window is removed from the screen
         windowManager?.removeView(floatView)
-    }
-
-    override fun getLifecycle(): Lifecycle {
-        return lifecycleRegistry
+        isForeground = false
     }
 
     private fun startForeground() {
@@ -310,8 +319,24 @@ class FloatingControlService : NotificationListenerService(), LifecycleOwner,
             stopForeground(true)
             stopSelf()
 
-            // The window is removed from the screen
-            windowManager?.removeView(floatView)
+            clear()
+        }
+        binding.closeButton.setOnLongClickListener {
+            stopForeground(true)
+            stopSelf()
+
+            clear()
+
+            val weak = WeakReference(this@FloatingControlService)
+            handler.postDelayed({
+                weak.get()?.let {
+                    if (!it.isForeground) {
+                        it.isForeground = true
+                        it.startForeground()
+                        it.initWindow()
+                    }
+                }
+            }, 1000L)
         }
         binding.playButton.setOnClickListener {
             if (binding.playButton.isSelected) {

@@ -25,7 +25,8 @@ class ActiveSessionsChangedListener(
     private val notificationListener: ComponentName
 ) : MediaController.Callback(), MediaSessionManager.OnActiveSessionsChangedListener {
 
-    private lateinit var mainHandler: Handler
+    private val mainHandler: Handler = Handler.createAsync(Looper.getMainLooper())
+    private var backgroundThread: HandlerThread? = null
     private lateinit var backgroundHandler: Handler
 
     private val playbackStateObserveTask = object : Runnable {
@@ -48,11 +49,15 @@ class ActiveSessionsChangedListener(
     }
 
     fun registerObserver() {
-        mainHandler = Handler.createAsync(Looper.getMainLooper())
+        backgroundThread?.let {
+            if (it.isAlive) {
+                it.quit()
+            }
+        }
         val thread = HandlerThread("service-listener-thread")
+        backgroundThread = thread
         thread.start()
         backgroundHandler = Handler(thread.looper)
-
         val mm = context.getSystemService(Context.MEDIA_SESSION_SERVICE) as? MediaSessionManager
         mm?.let {
             it.addOnActiveSessionsChangedListener(
@@ -73,8 +78,12 @@ class ActiveSessionsChangedListener(
         mm?.removeOnActiveSessionsChangedListener(this)
 
         backgroundHandler.removeCallbacks(playbackStateObserveTask)
+        backgroundThread?.let {
+            if (it.isAlive) {
+                it.quit()
+            }
+        }
 
-        clearController()
         dataModel.musicDataChange(null)
     }
 
@@ -139,22 +148,12 @@ class ActiveSessionsChangedListener(
                 val app = MediaApp.values().firstOrNull { it.packageName == con.packageName }
                 setController(con, app, force)
             } ?: run {
-                clearController()
                 dataModel.musicDataChange(null)
             }
         }
     }
 
     private fun setController(controller: MediaController, app: MediaApp?, force: Boolean) {
-        val exist = dataModel.musicData
-        if (exist == null || exist.app != app || exist.getController(
-                context,
-                notificationListener
-            )?.packageName != controller.packageName
-        ) {
-            clearController()
-            controller.registerCallback(this)
-        }
         if (force || dataModel.musicData?.packageName != controller.packageName || dataModel.musicData?.trackTitle != controller.metadata?.getString(
                 MediaMetadata.METADATA_KEY_TITLE
             ) || dataModel.musicData?.artistName != controller.metadata?.getString(MediaMetadata.METADATA_KEY_ARTIST)
@@ -166,13 +165,8 @@ class ActiveSessionsChangedListener(
         }
     }
 
-    private fun clearController() {
-        dataModel.musicData?.getController(context, notificationListener)?.unregisterCallback(this)
-    }
-
     private fun setMetadata(controller: MediaController, app: MediaApp?, metadata: MediaMetadata?) {
         if (metadata?.getString(MediaMetadata.METADATA_KEY_TITLE) == null) {
-            controller.unregisterCallback(this)
             dataModel.musicDataChange(null)
             return
         }
