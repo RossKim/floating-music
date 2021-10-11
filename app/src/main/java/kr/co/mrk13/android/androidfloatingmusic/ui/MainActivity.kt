@@ -112,7 +112,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun requestOverlayDisplayPermission() {
-        val builder = AlertDialog.Builder(this)
+        val builder = AlertDialog.Builder(this, R.style.AlertDialogTheme)
         builder.setCancelable(false)
         builder.setTitle(getString(R.string.alert_overlay_permission_title))
         builder.setMessage(getString(R.string.alert_overlay_permission_message))
@@ -141,7 +141,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun requestNotificationPermission() {
-        val builder = AlertDialog.Builder(this)
+        val builder = AlertDialog.Builder(this, R.style.AlertDialogTheme)
         builder.setCancelable(false)
         builder.setTitle(getString(R.string.alert_notification_permission_title))
         builder.setMessage(getString(R.string.alert_notification_permission_message))

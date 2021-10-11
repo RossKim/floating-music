@@ -4,9 +4,8 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.NotificationChannel
 import android.app.NotificationManager
-import android.content.ComponentName
-import android.content.Intent
-import android.content.SharedPreferences
+import android.content.*
+import android.content.res.Configuration
 import android.graphics.PixelFormat
 import android.graphics.Rect
 import android.os.Handler
@@ -32,6 +31,7 @@ import java.lang.ref.WeakReference
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
+
 
 enum class ResizeMode {
     BottomLeft, BottomRight
@@ -149,8 +149,21 @@ class FloatingControlService : NotificationListenerService(), LifecycleOwner,
             isForeground = true
             startForeground()
             initWindow()
+        } else {
+            sessionsChangeListener.runObserver()
         }
         return super.onStartCommand(intent, flags, startId)
+    }
+
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        sessionsChangeListener.runObserver()
+    }
+
+    override fun onRebind(intent: Intent?) {
+        super.onRebind(intent)
+
+        sessionsChangeListener.runObserver()
     }
 
     // It is called when stopService()
@@ -280,13 +293,24 @@ class FloatingControlService : NotificationListenerService(), LifecycleOwner,
         initUI()
 
         observePlayer()
+
+        val intentFilter = IntentFilter(Intent.ACTION_SCREEN_ON)
+        intentFilter.addAction(Intent.ACTION_SCREEN_OFF)
+        registerReceiver(screenStateReceiver, intentFilter)
     }
 
     private fun clear() {
         lifecycleRegistry.currentState = Lifecycle.State.DESTROYED
         mBinding = null
-        viewModel.removeObserver(this)
-        sessionsChangeListener.deregisterObserver()
+
+        try {
+            unobservePlayer()
+        } catch (e: Throwable) {
+            Log.d(e.message)
+        }
+
+        unregisterReceiver(screenStateReceiver)
+
         floatView?.removeOnLayoutChangeListener(windowLayoutChange)
         // Window is removed from the screen
         windowManager?.removeView(floatView)
@@ -394,6 +418,12 @@ class FloatingControlService : NotificationListenerService(), LifecycleOwner,
         viewModel.addObserver(this)
 
         sessionsChangeListener.registerObserver()
+    }
+
+    private fun unobservePlayer() {
+        viewModel.removeObserver(this)
+
+        sessionsChangeListener.deregisterObserver()
     }
 
     private fun sendCommand(command: MediaCommand) {
@@ -597,9 +627,22 @@ class FloatingControlService : NotificationListenerService(), LifecycleOwner,
     }
 
     private val windowLayoutChange =
-        View.OnLayoutChangeListener { v, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom ->
+        View.OnLayoutChangeListener { _, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom ->
             if (bottom - top != oldBottom - oldTop || right - left != oldRight - oldLeft) {
                 setUIVisibility(right - left, bottom - top)
             }
         }
+
+    private val screenStateReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            intent?.action?.let {
+                if (Intent.ACTION_SCREEN_ON == it) {
+                    observePlayer()
+                } else if (Intent.ACTION_SCREEN_OFF == it) {
+                    unobservePlayer()
+                }
+            }
+        }
+
+    }
 }

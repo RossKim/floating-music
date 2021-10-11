@@ -9,7 +9,6 @@ import android.media.session.MediaSessionManager
 import android.media.session.PlaybackState
 import android.os.Bundle
 import android.os.Handler
-import android.os.HandlerThread
 import android.os.Looper
 import kr.co.mrk13.android.androidfloatingmusic.constant.MediaApp
 import kr.co.mrk13.android.androidfloatingmusic.model.MusicData
@@ -26,8 +25,6 @@ class ActiveSessionsChangedListener(
 ) : MediaController.Callback(), MediaSessionManager.OnActiveSessionsChangedListener {
 
     private val mainHandler: Handler = Handler.createAsync(Looper.getMainLooper())
-    private var backgroundThread: HandlerThread? = null
-    private lateinit var backgroundHandler: Handler
 
     private val playbackStateObserveTask = object : Runnable {
         override fun run() {
@@ -44,47 +41,30 @@ class ActiveSessionsChangedListener(
                     checkActiveSession(controllers, false)
                 }
             }
-            backgroundHandler.postDelayed(this, 1000)
+            mainHandler.postDelayed(this, 1000)
         }
     }
 
     fun registerObserver() {
-        backgroundThread?.let {
-            if (it.isAlive) {
-                it.quit()
-            }
-        }
-        val thread = HandlerThread("service-listener-thread")
-        backgroundThread = thread
-        thread.start()
-        backgroundHandler = Handler(thread.looper)
         val mm = context.getSystemService(Context.MEDIA_SESSION_SERVICE) as? MediaSessionManager
         mm?.let {
-            it.addOnActiveSessionsChangedListener(
-                this,
-                notificationListener,
-                backgroundHandler
-            )
             val controllers = it.getActiveSessions(notificationListener)
             checkActiveSession(controllers, true)
         }
 
-        backgroundHandler.post(playbackStateObserveTask)
-
+        mainHandler.post(playbackStateObserveTask)
     }
 
     fun deregisterObserver() {
-        val mm = context.getSystemService(Context.MEDIA_SESSION_SERVICE) as? MediaSessionManager
-        mm?.removeOnActiveSessionsChangedListener(this)
-
-        backgroundHandler.removeCallbacks(playbackStateObserveTask)
-        backgroundThread?.let {
-            if (it.isAlive) {
-                it.quit()
-            }
-        }
+        mainHandler.removeCallbacks(playbackStateObserveTask)
 
         dataModel.musicDataChange(null)
+    }
+
+    fun runObserver() {
+        mainHandler.removeCallbacks(playbackStateObserveTask)
+
+        mainHandler.postDelayed(playbackStateObserveTask, 1000)
     }
 
     override fun onActiveSessionsChanged(controllers: MutableList<MediaController>?) {
