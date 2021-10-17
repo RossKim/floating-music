@@ -117,6 +117,7 @@ class FloatingControlService : NotificationListenerService(), LifecycleOwner,
     private lateinit var sessionsChangeListener: ActiveSessionsChangedListener
     private lateinit var lifecycleRegistry: LifecycleRegistry
     private var isForeground = false
+    private var initCount = 0
     private val handler = Handler(Looper.getMainLooper())
 
     private val pref: SharedPreferences
@@ -283,7 +284,29 @@ class FloatingControlService : NotificationListenerService(), LifecycleOwner,
 
         // The ViewGroup that inflates the floating_layout.xml is
         // added to the WindowManager with all the parameters
-        windowManager?.addView(floatView, floatWindowLayoutParam)
+        try {
+            windowManager?.addView(floatView, floatWindowLayoutParam)
+        } catch (e: Throwable) {
+            Log.e("error", e)
+            if (e is WindowManager.BadTokenException || (e as? RuntimeException)?.cause is WindowManager.BadTokenException) {
+                val weak = WeakReference(this@FloatingControlService)
+                handler.postDelayed({
+                    weak.get()?.let {
+                        if (it.isForeground) {
+                            it.initCount += 1
+                            if (it.initCount <= 3) {
+                                it.initWindow()
+                            } else {
+                                stopForeground(true)
+                                stopSelf()
+                                clear()
+                            }
+                        }
+                    }
+                }, 1000L)
+            }
+        }
+        initCount = 0
         setUIVisibility(windowWidth, windowHeight)
 
         lifecycleRegistry = LifecycleRegistry(this)
@@ -308,12 +331,18 @@ class FloatingControlService : NotificationListenerService(), LifecycleOwner,
         } catch (e: Throwable) {
             Log.d(e.message)
         }
-
-        unregisterReceiver(screenStateReceiver)
-
-        floatView?.removeOnLayoutChangeListener(windowLayoutChange)
-        // Window is removed from the screen
-        windowManager?.removeView(floatView)
+        try {
+            unregisterReceiver(screenStateReceiver)
+        } catch (e: Throwable) {
+            Log.d(e.message)
+        }
+        try {
+            floatView?.removeOnLayoutChangeListener(windowLayoutChange)
+            // Window is removed from the screen
+            windowManager?.removeView(floatView)
+        } catch (e: Throwable) {
+            Log.d(e.message)
+        }
         isForeground = false
     }
 
