@@ -28,18 +28,27 @@ class ActiveSessionsChangedListener(
 
     private val playbackStateObserveTask = object : Runnable {
         override fun run() {
-            dataModel.musicData?.let { data ->
-                data.getController(context, notificationListener)?.playbackState?.let {
-                    mainHandler.post {
-                        setPlayerState(data, it)
+            Log.d("interval playbackStateObserveTask")
+            try {
+                dataModel.musicData?.let { data ->
+                    data.getController(context, notificationListener)?.playbackState?.let {
+                        mainHandler.post {
+                            setPlayerState(data, it)
+                        }
                     }
                 }
+            } catch (e: Throwable) {
+                Log.e("setPlayerState Error", e)
+            }
+            try {
                 val mm =
                     context.getSystemService(Context.MEDIA_SESSION_SERVICE) as? MediaSessionManager
                 mm?.let {
                     val controllers = it.getActiveSessions(notificationListener)
                     checkActiveSession(controllers, false)
                 }
+            } catch (e: Throwable) {
+                Log.e("checkActiveSession error", e)
             }
             mainHandler.postDelayed(this, 1000)
         }
