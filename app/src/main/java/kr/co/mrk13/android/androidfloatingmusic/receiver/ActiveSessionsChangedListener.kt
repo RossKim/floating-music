@@ -7,6 +7,7 @@ import android.media.session.MediaController
 import android.media.session.MediaSession
 import android.media.session.MediaSessionManager
 import android.media.session.PlaybackState
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -24,7 +25,13 @@ class ActiveSessionsChangedListener(
     private val notificationListener: ComponentName
 ) : MediaController.Callback(), MediaSessionManager.OnActiveSessionsChangedListener {
 
-    private val mainHandler: Handler = Handler.createAsync(Looper.getMainLooper())
+    private val mainHandler: Handler by lazy {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            Handler.createAsync(Looper.getMainLooper())
+        } else {
+            Handler(Looper.getMainLooper())
+        }
+    }
 
     private val playbackStateObserveTask = object : Runnable {
         override fun run() {

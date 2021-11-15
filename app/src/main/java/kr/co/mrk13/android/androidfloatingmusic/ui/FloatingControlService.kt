@@ -8,6 +8,7 @@ import android.content.*
 import android.content.res.Configuration
 import android.graphics.PixelFormat
 import android.graphics.Rect
+import android.os.Build
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
@@ -348,14 +349,16 @@ class FloatingControlService : NotificationListenerService(), LifecycleOwner,
 
     private fun startForeground() {
         val channelId = Constant.notificationChannelId
-        val channel = NotificationChannel(
-            channelId,
-            getString(R.string.app_name),
-            NotificationManager.IMPORTANCE_LOW
-        )
-        (getSystemService(NOTIFICATION_SERVICE) as NotificationManager).createNotificationChannel(
-            channel
-        )
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                channelId,
+                getString(R.string.app_name),
+                NotificationManager.IMPORTANCE_LOW
+            )
+            (getSystemService(NOTIFICATION_SERVICE) as NotificationManager).createNotificationChannel(
+                channel
+            )
+        }
         val notification = NotificationCompat.Builder(this, channelId)
             .setContentTitle("")
             .setContentText("")
