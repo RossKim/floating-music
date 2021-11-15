@@ -32,6 +32,7 @@ import java.lang.ref.WeakReference
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
+import android.view.WindowManager
 
 
 enum class ResizeMode {
@@ -217,9 +218,12 @@ class FloatingControlService : NotificationListenerService(), LifecycleOwner,
 
         // WindowManager.LayoutParams takes a lot of parameters to set the
         // the parameters of the layout. One of them is Layout_type.
-        LAYOUT_TYPE =
-                // If API Level is more than 26, we need TYPE_APPLICATION_OVERLAY
+        LAYOUT_TYPE = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
+        } else {
+            @Suppress("DEPRECATION")
+            WindowManager.LayoutParams.TYPE_PHONE
+        }
 
         // Now the Parameter of the floating-window layout is set.
         // 1) The Width of the window will be 55% of the phone width.
