@@ -17,4 +17,5 @@
     <string name="des_floating_button_prev">이전 곡 버튼</string>
     <string name="des_floating_button_next">다음 곡 버튼</string>
     <string name="des_floating_button_close">종료 버튼</string>
+    <string name="des_floating_button_launch">음악 앱 실행 버튼</string>
 </resources>

@@ -159,6 +159,20 @@
     </RelativeLayout>
 
     <ImageButton
+        android:id="@+id/launch_button"
+        style="@style/Theme.AndroidFloatingMusic.ImageButton"
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:contentDescription="@string/des_floating_button_launch"
+        android:padding="8dp"
+        android:scaleType="fitCenter"
+        android:src="@drawable/ic_baseline_launch_24"
+        android:visibility="gone"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:visibility="visible" />
+
+    <ImageButton
         android:id="@+id/close_button"
         style="@style/Theme.AndroidFloatingMusic.ImageButton"
         android:layout_width="36dp"

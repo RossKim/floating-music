@@ -32,7 +32,6 @@ import java.lang.ref.WeakReference
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
-import android.view.WindowManager
 
 
 enum class ResizeMode {
@@ -398,6 +397,34 @@ class FloatingControlService : NotificationListenerService(), LifecycleOwner,
                 }
             }, 1000L)
         }
+        binding.launchButton.setOnClickListener {
+            try {
+                viewModel.musicData?.packageName?.let {
+                    var intent = packageManager.getLaunchIntentForPackage(it)
+                    if (intent == null) {
+                        val mainIntent = Intent()
+                        mainIntent.setPackage(it)
+                        val appList = packageManager.queryIntentActivities(mainIntent, 0)
+                        appList.firstOrNull()?.let {
+                            val activity = it.activityInfo
+                            val name = ComponentName(
+                                activity.applicationInfo.packageName,
+                                activity.name
+                            )
+                            val i = Intent(Intent.ACTION_MAIN)
+                            i.component = name
+                            intent = i
+                        }
+                    }
+                    intent?.let {
+                        it.flags
+                        startActivity(it)
+                    }
+                }
+            } catch (e: Throwable) {
+                Log.e("launch error", e)
+            }
+        }
         binding.playButton.setOnClickListener {
             if (binding.playButton.isSelected) {
                 sendCommand(MediaCommand.PAUSE)
@@ -500,12 +527,15 @@ class FloatingControlService : NotificationListenerService(), LifecycleOwner,
                 binding.backgroundImage.tag = null
                 Glide.with(this).clear(binding.backgroundImage)
             }
+            binding.launchButton.visibility =
+                if (data.packageName != null) View.VISIBLE else View.GONE
         } ?: run {
             binding.artistText.text = getString(R.string.msg_need_to_play)
             binding.songText.text = null
             binding.timeDurationText.text = ""
             binding.backgroundImage.tag = null
             Glide.with(this).clear(binding.backgroundImage)
+            binding.launchButton.visibility = View.GONE
         }
     }
 

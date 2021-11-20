@@ -17,4 +17,5 @@
     <string name="des_floating_button_prev">Skip previous button</string>
     <string name="des_floating_button_next">Skip next button</string>
     <string name="des_floating_button_close">Close button</string>
+    <string name="des_floating_button_launch">Launch the music app button</string>
 </resources>
