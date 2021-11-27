@@ -372,31 +372,64 @@ class FloatingControlService : NotificationListenerService(), LifecycleOwner,
 
     @SuppressLint("ClickableViewAccessibility")
     private fun initUI() {
-        binding.closeButton.setOnClickListener {
-            // stopSelf() method is used to stop the service if
-            // it was previously started
-            stopForeground(true)
-            stopSelf()
-
-            clear()
-        }
-        binding.closeButton.setOnLongClickListener {
-            stopForeground(true)
-            stopSelf()
-
-            clear()
-
-            val weak = WeakReference(this@FloatingControlService)
-            handler.postDelayed({
-                weak.get()?.let {
-                    if (!it.isForeground) {
-                        it.isForeground = true
-                        it.startForeground()
-                        it.initWindow()
+        binding.closeButton.setOnTouchListener(object : View.OnTouchListener {
+            private val gestureDetector = GestureDetector(
+                this@FloatingControlService,
+                object : GestureDetector.SimpleOnGestureListener() {
+                    override fun onDown(e: MotionEvent?): Boolean {
+                        return true
                     }
+
+                    override fun onDoubleTap(e: MotionEvent?): Boolean {
+                        binding.root.visibility = View.GONE
+
+                        val weak = WeakReference(this@FloatingControlService)
+                        handler.postDelayed({
+                            weak.get()?.let {
+                                if (it.isForeground) {
+                                    it.binding.root.visibility = View.VISIBLE
+                                }
+                            }
+                        }, 20 * 1000L)
+                        return true
+                    }
+
+                    override fun onSingleTapConfirmed(e: MotionEvent?): Boolean {
+                        // stopSelf() method is used to stop the service if
+                        // it was previously started
+                        stopForeground(true)
+                        stopSelf()
+
+                        clear()
+                        return true
+                    }
+
+                    override fun onLongPress(e: MotionEvent?) {
+                        stopForeground(true)
+                        stopSelf()
+
+                        clear()
+
+                        val weak = WeakReference(this@FloatingControlService)
+                        handler.postDelayed({
+                            weak.get()?.let {
+                                if (!it.isForeground) {
+                                    it.isForeground = true
+                                    it.startForeground()
+                                    it.initWindow()
+                                }
+                            }
+                        }, 1000L)
+                    }
+                })
+
+            override fun onTouch(v: View?, event: MotionEvent?): Boolean {
+                event?.let {
+                    gestureDetector.onTouchEvent(it)
                 }
-            }, 1000L)
-        }
+                return true
+            }
+        })
         binding.launchButton.setOnClickListener {
             try {
                 viewModel.musicData?.packageName?.let {
