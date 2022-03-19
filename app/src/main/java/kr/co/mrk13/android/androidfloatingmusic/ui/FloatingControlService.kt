@@ -14,10 +14,12 @@ import android.os.IBinder
 import android.os.Looper
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
+import android.util.TypedValue
 import android.view.*
 import android.widget.LinearLayout
 import androidx.core.app.NotificationCompat
 import androidx.lifecycle.*
+import androidx.preference.PreferenceManager
 import com.bumptech.glide.Glide
 import kr.co.mrk13.android.androidfloatingmusic.R
 import kr.co.mrk13.android.androidfloatingmusic.constant.Constant
@@ -143,6 +145,7 @@ class FloatingControlService : NotificationListenerService(), LifecycleOwner,
         }
 
         initWindow()
+        observeSetting()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -370,6 +373,44 @@ class FloatingControlService : NotificationListenerService(), LifecycleOwner,
         startForeground(920, notification)
     }
 
+    private var settingListener = object : SharedPreferences.OnSharedPreferenceChangeListener {
+        override fun onSharedPreferenceChanged(
+            sharedPreferences: SharedPreferences?,
+            key: String?
+        ) {
+            @Suppress("SENSELESS_COMPARISON")
+            if (binding == null) {
+                return
+            }
+            sharedPreferences?.let { pref ->
+                when (key) {
+                    "title_fontsize" -> {
+                        val size = pref.getString(key, "12")?.toIntOrNull() ?: 12
+                        binding.artistText.setTextSize(TypedValue.COMPLEX_UNIT_SP, size.toFloat())
+                        binding.songText.setTextSize(TypedValue.COMPLEX_UNIT_SP, size.toFloat())
+                    }
+                    "time_fontsize" -> {
+                        val size = pref.getString(key, "10")?.toIntOrNull() ?: 10
+                        binding.timePositionText.setTextSize(
+                            TypedValue.COMPLEX_UNIT_SP,
+                            size.toFloat()
+                        )
+                        binding.timeDurationText.setTextSize(
+                            TypedValue.COMPLEX_UNIT_SP,
+                            size.toFloat()
+                        )
+                    }
+                }
+            }
+        }
+
+    }
+
+    private fun observeSetting() {
+        val prefs = PreferenceManager.getDefaultSharedPreferences(this)
+        prefs.registerOnSharedPreferenceChangeListener(settingListener)
+    }
+
     @SuppressLint("ClickableViewAccessibility")
     private fun initUI() {
         binding.closeButton.setOnTouchListener(object : View.OnTouchListener {
@@ -430,6 +471,11 @@ class FloatingControlService : NotificationListenerService(), LifecycleOwner,
                 return true
             }
         })
+        binding.settingButton.setOnClickListener {
+            val intent = Intent(this, SettingActivity::class.java)
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            startActivity(intent)
+        }
         binding.launchButton.setOnClickListener {
             try {
                 viewModel.musicData?.packageName?.let {
@@ -480,6 +526,17 @@ class FloatingControlService : NotificationListenerService(), LifecycleOwner,
         floatView?.setOnTouchListener(windowTouch)
 
         floatView?.addOnLayoutChangeListener(windowLayoutChange)
+
+
+        val prefs = PreferenceManager.getDefaultSharedPreferences(this)
+        prefs.getString("title_fontsize", "12")?.toIntOrNull()?.let { size ->
+            binding.artistText.setTextSize(TypedValue.COMPLEX_UNIT_SP, size.toFloat())
+            binding.songText.setTextSize(TypedValue.COMPLEX_UNIT_SP, size.toFloat())
+        }
+        prefs.getString("time_fontsize", "12")?.toIntOrNull()?.let { size ->
+            binding.timePositionText.setTextSize(TypedValue.COMPLEX_UNIT_SP, size.toFloat())
+            binding.timeDurationText.setTextSize(TypedValue.COMPLEX_UNIT_SP, size.toFloat())
+        }
     }
 
     private fun setUIVisibility(width: Int, height: Int) {
@@ -490,11 +547,13 @@ class FloatingControlService : NotificationListenerService(), LifecycleOwner,
             binding.timeDurationText.visibility = View.VISIBLE
             binding.prevButton.visibility = View.VISIBLE
             binding.nextButton.visibility = View.VISIBLE
+            binding.settingButton.visibility = View.VISIBLE
         } else {
             binding.prevButton.visibility = if (widthDP >= 120) View.VISIBLE else View.GONE
             binding.nextButton.visibility = if (widthDP >= 120) View.VISIBLE else View.GONE
             binding.timePositionText.visibility = View.GONE
             binding.timeDurationText.visibility = View.GONE
+            binding.settingButton.visibility = View.GONE
         }
         if (heightDP >= 120) {
             binding.artistText.maxLines = 2
@@ -556,7 +615,7 @@ class FloatingControlService : NotificationListenerService(), LifecycleOwner,
                     binding.backgroundImage.tag = null
                     Glide.with(this).clear(binding.backgroundImage)
                 }
-            } ?: {
+            } ?: run {
                 binding.backgroundImage.tag = null
                 Glide.with(this).clear(binding.backgroundImage)
             }

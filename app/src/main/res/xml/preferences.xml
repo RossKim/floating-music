@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <androidx.preference.ListPreference
+        android:defaultValue="12"
+        android:entries="@array/fontsize"
+        android:entryValues="@array/fontsize_value"
+        android:key="title_fontsize"
+        android:negativeButtonText="@null"
+        android:positiveButtonText="@null"
+        android:summary="@string/pref_title_fontsize_message"
+        android:title="@string/pref_title_fontsize_title" />
+    <androidx.preference.ListPreference
+        android:defaultValue="10"
+        android:entries="@array/fontsize"
+        android:entryValues="@array/fontsize_value"
+        android:key="time_fontsize"
+        android:negativeButtonText="@null"
+        android:positiveButtonText="@null"
+        android:summary="@string/pref_time_fontsize_message"
+        android:title="@string/pref_time_fontsize_title" />
+</androidx.preference.PreferenceScreen>

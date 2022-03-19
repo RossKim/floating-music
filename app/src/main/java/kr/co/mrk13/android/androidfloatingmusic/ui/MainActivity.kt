@@ -148,9 +148,9 @@ class MainActivity : AppCompatActivity() {
         } else {
             if (Settings.canDrawOverlays(this)) return true
             try {
-                val mgr = getSystemService(Context.WINDOW_SERVICE) as WindowManager
-                    ?: return false
                 //getSystemService might return null
+                val mgr = getSystemService(Context.WINDOW_SERVICE) as? WindowManager
+                    ?: return false
                 val viewToAdd = View(this)
                 val params = WindowManager.LayoutParams(
                     0,

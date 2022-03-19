@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="fontsize">
+        <item>10pt</item>
+        <item>11pt</item>
+        <item>12pt</item>
+        <item>13pt</item>
+        <item>14pt</item>
+        <item>15pt</item>
+        <item>16pt</item>
+        <item>17pt</item>
+        <item>18pt</item>
+    </string-array>
+    <string-array name="fontsize_value">
+        <item>10</item>
+        <item>11</item>
+        <item>12</item>
+        <item>13</item>
+        <item>14</item>
+        <item>15</item>
+        <item>16</item>
+        <item>17</item>
+        <item>18</item>
+    </string-array>
+</resources>

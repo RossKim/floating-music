@@ -29,6 +29,11 @@
             </intent-filter>
         </activity>
 
+
+        <activity
+            android:name=".ui.SettingActivity"
+            android:exported="false" />
+
         <service
             android:name=".ui.FloatingControlService"
             android:exported="false"

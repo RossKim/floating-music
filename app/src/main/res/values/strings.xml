@@ -17,5 +17,11 @@
     <string name="des_floating_button_prev">Skip previous button</string>
     <string name="des_floating_button_next">Skip next button</string>
     <string name="des_floating_button_close">Close button</string>
+    <string name="des_floating_button_setting">Setting button</string>
     <string name="des_floating_button_launch">Launch the music app button</string>
+
+    <string name="pref_title_fontsize_title">Song title font size</string>
+    <string name="pref_title_fontsize_message">Adjust font size of a song title.</string>
+    <string name="pref_time_fontsize_title">Time font size</string>
+    <string name="pref_time_fontsize_message">Adjust font size of a current playing time.</string>
 </resources>

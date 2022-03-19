@@ -17,5 +17,11 @@
     <string name="des_floating_button_prev">이전 곡 버튼</string>
     <string name="des_floating_button_next">다음 곡 버튼</string>
     <string name="des_floating_button_close">종료 버튼</string>
+    <string name="des_floating_button_setting">설정 버튼</string>
     <string name="des_floating_button_launch">음악 앱 실행 버튼</string>
+
+    <string name="pref_title_fontsize_title">곡명 글자 사이즈</string>
+    <string name="pref_title_fontsize_message">곡명의 글자 사이즈를 변경할 수 있습니다.</string>
+    <string name="pref_time_fontsize_title">시간 글자 사이즈</string>
+    <string name="pref_time_fontsize_message">현재시간의 글자 사이즈를 변경할 수 있습니다.</string>
 </resources>
