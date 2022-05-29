@@ -23,6 +23,7 @@ import androidx.preference.PreferenceManager
 import com.bumptech.glide.Glide
 import kr.co.mrk13.android.androidfloatingmusic.R
 import kr.co.mrk13.android.androidfloatingmusic.constant.Constant
+import kr.co.mrk13.android.androidfloatingmusic.constant.MediaApp
 import kr.co.mrk13.android.androidfloatingmusic.constant.MediaCommand
 import kr.co.mrk13.android.androidfloatingmusic.databinding.FloatingControlBinding
 import kr.co.mrk13.android.androidfloatingmusic.model.MusicData
@@ -56,9 +57,14 @@ interface MusicDataViewModel {
     fun removeObserver(observer: MusicDataViewModelObserver)
 }
 
-class FloatingControlServiceViewModel : MusicDataViewModel {
+class FloatingControlServiceViewModel(private val app: Context) : MusicDataViewModel {
     private val lock = Any()
     private val observers = ArrayList<MusicDataViewModelObserver>()
+
+    private val pref: SharedPreferences
+        get() {
+            return app.getSharedPreferences("floating-music-pref", Activity.MODE_PRIVATE)
+        }
 
     private var mutableMusicData: MusicData? = null
         set(value) {
@@ -74,8 +80,24 @@ class FloatingControlServiceViewModel : MusicDataViewModel {
         }
     override val musicPlayingStateData: MusicData? get() = mutableMusicPlayingStateData
 
+    init {
+        pref.getString(Constant.prefPlayedPackageName, null)?.takeIf { it.isNotEmpty() }
+            ?.let { packageName ->
+                val app = MediaApp.values().firstOrNull { it.packageName == packageName }
+                val data = MusicData(
+                    app, packageName, null, null, null, 0L, null, 0L, false,
+                    initData = true
+                )
+                mutableMusicData = data
+                mutableMusicPlayingStateData = data
+            }
+    }
+
     override fun musicDataChange(data: MusicData?) {
         synchronized(lock) {
+            if (data == null && mutableMusicData?.initData == true) {
+                return@synchronized
+            }
             mutableMusicData = data
         }
     }
@@ -83,6 +105,12 @@ class FloatingControlServiceViewModel : MusicDataViewModel {
     override fun playingStateChange(data: MusicData?) {
         synchronized(lock) {
             mutableMusicPlayingStateData = data
+        }
+
+        data?.takeIf { it.playing }?.packageName?.let {
+            val pref = this.pref.edit()
+            pref.putString(Constant.prefPlayedPackageName, it)
+            pref.apply()
         }
     }
 
@@ -116,7 +144,7 @@ class FloatingControlService : NotificationListenerService(), LifecycleOwner,
     private var mBinding: FloatingControlBinding? = null
     private val binding get() = mBinding!!
 
-    private val viewModel = FloatingControlServiceViewModel()
+    private lateinit var viewModel: FloatingControlServiceViewModel
     private lateinit var sessionsChangeListener: ActiveSessionsChangedListener
     private lateinit var lifecycleRegistry: LifecycleRegistry
     private var isForeground = false
@@ -135,6 +163,7 @@ class FloatingControlService : NotificationListenerService(), LifecycleOwner,
     override fun onCreate() {
         super.onCreate()
 
+        viewModel = FloatingControlServiceViewModel(applicationContext)
         sessionsChangeListener =
             ActiveSessionsChangedListener(this, viewModel, sessionComponentName)
 
@@ -146,6 +175,10 @@ class FloatingControlService : NotificationListenerService(), LifecycleOwner,
 
         initWindow()
         observeSetting()
+
+        viewModel.musicData?.let {
+            onMusicDataChange(it)
+        }
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -478,11 +511,11 @@ class FloatingControlService : NotificationListenerService(), LifecycleOwner,
         }
         binding.launchButton.setOnClickListener {
             try {
-                viewModel.musicData?.packageName?.let {
-                    var intent = packageManager.getLaunchIntentForPackage(it)
+                viewModel.musicData?.packageName?.let { packageName ->
+                    var intent = packageManager.getLaunchIntentForPackage(packageName)
                     if (intent == null) {
                         val mainIntent = Intent()
-                        mainIntent.setPackage(it)
+                        mainIntent.setPackage(packageName)
                         val appList = packageManager.queryIntentActivities(mainIntent, 0)
                         appList.firstOrNull()?.let {
                             val activity = it.activityInfo
@@ -594,8 +627,13 @@ class FloatingControlService : NotificationListenerService(), LifecycleOwner,
 
     private fun setMusicDataToUI(musicData: MusicData?) {
         musicData?.let { data ->
-            binding.artistText.text = data.artistName
-            binding.songText.text = data.trackTitle
+            if (data.initData) {
+                binding.artistText.text = getString(R.string.msg_need_to_play)
+                binding.songText.text = null
+            } else {
+                binding.artistText.text = data.artistName
+                binding.songText.text = data.trackTitle
+            }
             binding.timeDurationText.text = positionToText(data.duration)
             data.albumUrl?.let { pair ->
                 pair.second?.let {
@@ -641,10 +679,10 @@ class FloatingControlService : NotificationListenerService(), LifecycleOwner,
             text += "${(position / 3600).toString(10).padStart(2, '0')}:"
             position %= 3600
         }
-        if (position >= 60) {
-            text += "${(position / 60).toString(10).padStart(2, '0')}:"
+        text += if (position >= 60) {
+            "${(position / 60).toString(10).padStart(2, '0')}:"
         } else {
-            text += "00:"
+            "00:"
         }
         position %= 60
         return "${text}${position.toString(10).padStart(2, '0')}"

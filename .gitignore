@@ -271,3 +271,6 @@ local.properties
 
 
 app/google-services.json
+.idea/codestream.xml
+
+.idea/deploymentTargetDropDown.xml

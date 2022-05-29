@@ -20,6 +20,7 @@ data class MusicData(
     val albumUrl: Pair<String?, Bitmap?>?,
     var playingPosition: Long,
     var playing: Boolean,
+    val initData: Boolean = false
 ) {
     fun getController(context: Context, componentName: ComponentName): MediaController? {
         val mm = context.getSystemService(Context.MEDIA_SESSION_SERVICE) as? MediaSessionManager

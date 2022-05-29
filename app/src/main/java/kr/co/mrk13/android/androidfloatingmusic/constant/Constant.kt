@@ -14,6 +14,7 @@ class Constant {
         const val resizeThreshold = 20
 
         const val prefWindowPosition = "pref-window-pos"
+        const val prefPlayedPackageName = "pref-played-package"
     }
 }
 
