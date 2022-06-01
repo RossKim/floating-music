@@ -62,10 +62,14 @@ class ActiveSessionsChangedListener(
     }
 
     fun registerObserver() {
-        val mm = context.getSystemService(Context.MEDIA_SESSION_SERVICE) as? MediaSessionManager
-        mm?.let {
-            val controllers = it.getActiveSessions(notificationListener)
-            checkActiveSession(controllers, true)
+        try {
+            val mm = context.getSystemService(Context.MEDIA_SESSION_SERVICE) as? MediaSessionManager
+            mm?.let {
+                val controllers = it.getActiveSessions(notificationListener)
+                checkActiveSession(controllers, true)
+            }
+        } catch (e: Throwable) {
+            Log.e("checkActiveSession error", e)
         }
 
         mainHandler.post(playbackStateObserveTask)
@@ -133,12 +137,17 @@ class ActiveSessionsChangedListener(
     )
 
     private fun checkActiveSession(controllers: MutableList<MediaController>?, force: Boolean) {
-        Log.d(controllers?.map { "${it.packageName} : ${it.playbackState?.state}" }
-            ?.joinToString(",") ?: "no con")
+        Log.d(controllers?.joinToString(",") { "${it.packageName} : ${it.playbackState?.state}" }
+            ?: "no con")
+        val existPackage = dataModel.musicData?.packageName
+        val hasTitleControllers = controllers?.filter {
+            !(it.metadata?.getString(MediaMetadata.METADATA_KEY_TITLE).isNullOrEmpty())
+        } ?: listOf()
         val controller =
-            controllers?.firstOrNull { inState.contains(it.playbackState?.state ?: 0) }
-                ?: controllers?.firstOrNull { it.playbackState?.state == PlaybackState.STATE_PAUSED }
-                ?: controllers?.firstOrNull()
+            hasTitleControllers.firstOrNull { inState.contains(it.playbackState?.state ?: 0) }
+                ?: hasTitleControllers.firstOrNull { existPackage != null && existPackage == it.packageName }
+                ?: hasTitleControllers.firstOrNull { it.playbackState?.state == PlaybackState.STATE_PAUSED }
+                ?: hasTitleControllers.firstOrNull()
         mainHandler.post {
             controller?.let { con ->
                 val app = MediaApp.values().firstOrNull { it.packageName == con.packageName }
@@ -193,7 +202,7 @@ class ActiveSessionsChangedListener(
 
     private fun setPlayerState(data: MusicData, state: PlaybackState?) {
         data.playingPosition = state?.position ?: -1
-        data.playing = state?.state ?: 0 == PlaybackState.STATE_PLAYING
+        data.playing = (state?.state ?: 0) == PlaybackState.STATE_PLAYING
         dataModel.playingStateChange(data)
     }
 }

@@ -411,29 +411,36 @@ class FloatingControlService : NotificationListenerService(), LifecycleOwner,
             sharedPreferences: SharedPreferences?,
             key: String?
         ) {
-            @Suppress("SENSELESS_COMPARISON")
-            if (binding == null) {
-                return
-            }
-            sharedPreferences?.let { pref ->
-                when (key) {
-                    "title_fontsize" -> {
-                        val size = pref.getString(key, "12")?.toIntOrNull() ?: 12
-                        binding.artistText.setTextSize(TypedValue.COMPLEX_UNIT_SP, size.toFloat())
-                        binding.songText.setTextSize(TypedValue.COMPLEX_UNIT_SP, size.toFloat())
-                    }
-                    "time_fontsize" -> {
-                        val size = pref.getString(key, "10")?.toIntOrNull() ?: 10
-                        binding.timePositionText.setTextSize(
-                            TypedValue.COMPLEX_UNIT_SP,
-                            size.toFloat()
-                        )
-                        binding.timeDurationText.setTextSize(
-                            TypedValue.COMPLEX_UNIT_SP,
-                            size.toFloat()
-                        )
+            try {
+                @Suppress("SENSELESS_COMPARISON")
+                if (binding == null) {
+                    return
+                }
+                sharedPreferences?.let { pref ->
+                    when (key) {
+                        "title_fontsize" -> {
+                            val size = pref.getString(key, "12")?.toIntOrNull() ?: 12
+                            binding.artistText.setTextSize(
+                                TypedValue.COMPLEX_UNIT_SP,
+                                size.toFloat()
+                            )
+                            binding.songText.setTextSize(TypedValue.COMPLEX_UNIT_SP, size.toFloat())
+                        }
+                        "time_fontsize" -> {
+                            val size = pref.getString(key, "10")?.toIntOrNull() ?: 10
+                            binding.timePositionText.setTextSize(
+                                TypedValue.COMPLEX_UNIT_SP,
+                                size.toFloat()
+                            )
+                            binding.timeDurationText.setTextSize(
+                                TypedValue.COMPLEX_UNIT_SP,
+                                size.toFloat()
+                            )
+                        }
                     }
                 }
+            } catch (e: Throwable) {
+                Log.e("onSharedPreferenceChanged", e)
             }
         }
 
@@ -657,8 +664,11 @@ class FloatingControlService : NotificationListenerService(), LifecycleOwner,
                 binding.backgroundImage.tag = null
                 Glide.with(this).clear(binding.backgroundImage)
             }
-            binding.launchButton.visibility =
-                if (data.packageName != null) View.VISIBLE else View.GONE
+            binding.launchButton.visibility = data.packageName?.takeIf { name ->
+                MediaApp.values().firstOrNull { it.packageName == name } != null
+            }?.let {
+                View.VISIBLE
+            } ?: View.GONE
         } ?: run {
             binding.artistText.text = getString(R.string.msg_need_to_play)
             binding.songText.text = null

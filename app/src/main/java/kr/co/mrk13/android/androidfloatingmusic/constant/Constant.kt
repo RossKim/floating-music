@@ -32,5 +32,9 @@ enum class MediaApp(val packageName: String) {
     TIDAL("com.aspiro.tidal"),
     MELON("com.iloen.melon"),
     FLO("skplanet.musicmate"),
-    VIBE("com.naver.vibe")
+    VIBE("com.naver.vibe"),
+    Youtube("com.google.android.youtube"),
+    AppleMusic("com.apple.android.music"),
+    Genie("com.ktmusic.geniemusic"),
+    YoutubeMusic("com.google.android.apps.youtube.music")
 }

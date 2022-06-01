@@ -12,8 +12,8 @@ android {
         applicationId "kr.co.mrk13.android.androidfloatingmusic"
         minSdk 24
         targetSdk 31
-        versionCode 22
-        versionName "1.1.1"
+        versionCode 25
+        versionName "1.1.2"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -40,7 +40,7 @@ android {
 dependencies {
     implementation 'androidx.core:core-ktx:1.7.0'
     implementation 'androidx.appcompat:appcompat:1.4.1'
-    implementation 'com.google.android.material:material:1.5.0'
+    implementation 'com.google.android.material:material:1.6.1'
     implementation 'androidx.preference:preference-ktx:1.2.0'
     implementation 'com.github.bumptech.glide:glide:4.12.0'
     implementation platform('com.google.firebase:firebase-bom:29.2.1')

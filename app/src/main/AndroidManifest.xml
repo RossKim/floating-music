@@ -1,15 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
     package="kr.co.mrk13.android.androidfloatingmusic">
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <uses-permission
-        android:name="android.permission.QUERY_ALL_PACKAGES"
-        tools:ignore="QueryAllPackagesPermission" />
+
+    <queries>
+        <package android:name="com.android.music" />
+        <package android:name="com.amazon.mp3" />
+        <package android:name="com.neowiz.android.bugs" />
+        <package android:name="com.aspiro.tidal" />
+        <package android:name="com.iloen.melon" />
+        <package android:name="skplanet.musicmate" />
+        <package android:name="com.naver.vibe" />
+        <package android:name="com.google.android.youtube" />
+    </queries>
 
     <application
         android:allowBackup="true"
