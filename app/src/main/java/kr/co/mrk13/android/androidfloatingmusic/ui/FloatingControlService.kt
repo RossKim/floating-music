@@ -462,30 +462,6 @@ class FloatingControlService : NotificationListenerService(), LifecycleOwner,
                     }
 
                     override fun onDoubleTap(e: MotionEvent?): Boolean {
-                        binding.root.visibility = View.GONE
-
-                        val weak = WeakReference(this@FloatingControlService)
-                        handler.postDelayed({
-                            weak.get()?.let {
-                                if (it.isForeground) {
-                                    it.binding.root.visibility = View.VISIBLE
-                                }
-                            }
-                        }, 20 * 1000L)
-                        return true
-                    }
-
-                    override fun onSingleTapConfirmed(e: MotionEvent?): Boolean {
-                        // stopSelf() method is used to stop the service if
-                        // it was previously started
-                        stopForeground(true)
-                        stopSelf()
-
-                        clear()
-                        return true
-                    }
-
-                    override fun onLongPress(e: MotionEvent?) {
                         stopForeground(true)
                         stopSelf()
 
@@ -501,6 +477,30 @@ class FloatingControlService : NotificationListenerService(), LifecycleOwner,
                                 }
                             }
                         }, 1000L)
+                        return true
+                    }
+
+                    override fun onSingleTapConfirmed(e: MotionEvent?): Boolean {
+                        // stopSelf() method is used to stop the service if
+                        // it was previously started
+                        stopForeground(true)
+                        stopSelf()
+
+                        clear()
+                        return true
+                    }
+
+                    override fun onLongPress(e: MotionEvent?) {
+                        binding.root.visibility = View.GONE
+
+                        val weak = WeakReference(this@FloatingControlService)
+                        handler.postDelayed({
+                            weak.get()?.let {
+                                if (it.isForeground) {
+                                    it.binding.root.visibility = View.VISIBLE
+                                }
+                            }
+                        }, 60 * 1000L)
                     }
                 })
 

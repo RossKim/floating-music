@@ -12,7 +12,7 @@ android {
         applicationId "kr.co.mrk13.android.androidfloatingmusic"
         minSdk 24
         targetSdk 31
-        versionCode 25
+        versionCode 26
         versionName "1.1.2"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
