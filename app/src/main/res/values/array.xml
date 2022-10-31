@@ -22,4 +22,17 @@
         <item>17</item>
         <item>18</item>
     </string-array>
+    <string-array name="opacity_value">
+        <item>0.0</item>
+        <item>0.1</item>
+        <item>0.2</item>
+        <item>0.3</item>
+        <item>0.4</item>
+        <item>0.5</item>
+        <item>0.6</item>
+        <item>0.7</item>
+        <item>0.8</item>
+        <item>0.9</item>
+        <item>1.0</item>
+    </string-array>
 </resources>

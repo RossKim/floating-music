@@ -108,7 +108,7 @@ class MainActivity : AppCompatActivity() {
                         FloatingControlService::class.java
                     )
                 )
-            } catch (e: Throwable) {
+            } catch (ignore: Throwable) {
 
             }
         }

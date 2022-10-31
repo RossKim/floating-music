@@ -24,9 +24,7 @@ data class MusicData(
 ) {
     fun getController(context: Context, componentName: ComponentName): MediaController? {
         val mm = context.getSystemService(Context.MEDIA_SESSION_SERVICE) as? MediaSessionManager
-        if (mm == null) {
-            return null
-        }
+            ?: return null
         val controllers = mm.getActiveSessions(componentName)
         return controllers.firstOrNull { it.packageName == this.packageName }
     }

@@ -24,4 +24,10 @@
     <string name="pref_title_fontsize_message">Adjust font size of a song title.</string>
     <string name="pref_time_fontsize_title">Time font size</string>
     <string name="pref_time_fontsize_message">Adjust font size of a current playing time.</string>
+    <string name="pref_view_opacity_title">View opacity</string>
+    <string name="pref_view_opacity_message">Adjust opacity of the control view.</string>
+    <string name="pref_button_opacity_title">Top Buttons opacity</string>
+    <string name="pref_button_opacity_message">Adjust opacity of the top buttons.</string>
+    <string name="pref_support_title">Support</string>
+    <string name="pref_support_message">Buy a coffee to developer.</string>
 </resources>

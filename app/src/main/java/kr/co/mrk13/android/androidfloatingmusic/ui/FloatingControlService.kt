@@ -5,6 +5,7 @@ import android.app.Activity
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.*
+import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.graphics.PixelFormat
 import android.graphics.Rect
@@ -17,6 +18,7 @@ import android.service.notification.StatusBarNotification
 import android.util.TypedValue
 import android.view.*
 import android.widget.LinearLayout
+import android.widget.RelativeLayout
 import androidx.core.app.NotificationCompat
 import androidx.lifecycle.*
 import androidx.preference.PreferenceManager
@@ -337,7 +339,7 @@ class FloatingControlService : NotificationListenerService(), LifecycleOwner,
                             if (it.initCount <= 3) {
                                 it.initWindow()
                             } else {
-                                stopForeground(true)
+                                stopForeground(STOP_FOREGROUND_REMOVE)
                                 stopSelf()
                                 clear()
                             }
@@ -416,26 +418,10 @@ class FloatingControlService : NotificationListenerService(), LifecycleOwner,
                 if (binding == null) {
                     return
                 }
-                sharedPreferences?.let { pref ->
+                sharedPreferences?.let { prefs ->
                     when (key) {
-                        "title_fontsize" -> {
-                            val size = pref.getString(key, "12")?.toIntOrNull() ?: 12
-                            binding.artistText.setTextSize(
-                                TypedValue.COMPLEX_UNIT_SP,
-                                size.toFloat()
-                            )
-                            binding.songText.setTextSize(TypedValue.COMPLEX_UNIT_SP, size.toFloat())
-                        }
-                        "time_fontsize" -> {
-                            val size = pref.getString(key, "10")?.toIntOrNull() ?: 10
-                            binding.timePositionText.setTextSize(
-                                TypedValue.COMPLEX_UNIT_SP,
-                                size.toFloat()
-                            )
-                            binding.timeDurationText.setTextSize(
-                                TypedValue.COMPLEX_UNIT_SP,
-                                size.toFloat()
-                            )
+                        "title_fontsize", "time_fontsize", "view_opacity", "top_button_opacity" -> {
+                            setPreferencesToUI(prefs)
                         }
                     }
                 }
@@ -457,12 +443,12 @@ class FloatingControlService : NotificationListenerService(), LifecycleOwner,
             private val gestureDetector = GestureDetector(
                 this@FloatingControlService,
                 object : GestureDetector.SimpleOnGestureListener() {
-                    override fun onDown(e: MotionEvent?): Boolean {
+                    override fun onDown(e: MotionEvent): Boolean {
                         return true
                     }
 
-                    override fun onDoubleTap(e: MotionEvent?): Boolean {
-                        stopForeground(true)
+                    override fun onDoubleTap(e: MotionEvent): Boolean {
+                        stopForeground(STOP_FOREGROUND_REMOVE)
                         stopSelf()
 
                         clear()
@@ -480,17 +466,17 @@ class FloatingControlService : NotificationListenerService(), LifecycleOwner,
                         return true
                     }
 
-                    override fun onSingleTapConfirmed(e: MotionEvent?): Boolean {
+                    override fun onSingleTapConfirmed(e: MotionEvent): Boolean {
                         // stopSelf() method is used to stop the service if
                         // it was previously started
-                        stopForeground(true)
+                        stopForeground(STOP_FOREGROUND_REMOVE)
                         stopSelf()
 
                         clear()
                         return true
                     }
 
-                    override fun onLongPress(e: MotionEvent?) {
+                    override fun onLongPress(e: MotionEvent) {
                         binding.root.visibility = View.GONE
 
                         val weak = WeakReference(this@FloatingControlService)
@@ -523,7 +509,19 @@ class FloatingControlService : NotificationListenerService(), LifecycleOwner,
                     if (intent == null) {
                         val mainIntent = Intent()
                         mainIntent.setPackage(packageName)
-                        val appList = packageManager.queryIntentActivities(mainIntent, 0)
+                        val appList = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                            packageManager.queryIntentActivities(
+                                mainIntent, PackageManager.ResolveInfoFlags.of(
+                                    PackageManager.MATCH_ALL.toLong()
+                                )
+                            )
+                        } else {
+                            @Suppress("DEPRECATION")
+                            packageManager.queryIntentActivities(
+                                mainIntent,
+                                PackageManager.MATCH_ALL
+                            )
+                        }
                         appList.firstOrNull()?.let {
                             val activity = it.activityInfo
                             val name = ComponentName(
@@ -569,13 +567,46 @@ class FloatingControlService : NotificationListenerService(), LifecycleOwner,
 
 
         val prefs = PreferenceManager.getDefaultSharedPreferences(this)
+        setPreferencesToUI(prefs)
+    }
+
+    private fun setPreferencesToUI(prefs: SharedPreferences) {
         prefs.getString("title_fontsize", "12")?.toIntOrNull()?.let { size ->
             binding.artistText.setTextSize(TypedValue.COMPLEX_UNIT_SP, size.toFloat())
             binding.songText.setTextSize(TypedValue.COMPLEX_UNIT_SP, size.toFloat())
+
+            val buttonSize = (resources.getDimensionPixelSize(R.dimen.control_button_size)
+                .toDouble() * size.toDouble() / 12.0).toInt()
+            binding.playButton.layoutParams =
+                (binding.playButton.layoutParams as? RelativeLayout.LayoutParams)?.let {
+                    it.width = buttonSize
+                    it.height = buttonSize
+                    it
+                }
+            binding.prevButton.layoutParams =
+                (binding.prevButton.layoutParams as? RelativeLayout.LayoutParams)?.let {
+                    it.width = buttonSize
+                    it.height = buttonSize
+                    it
+                }
+            binding.nextButton.layoutParams =
+                (binding.nextButton.layoutParams as? RelativeLayout.LayoutParams)?.let {
+                    it.width = buttonSize
+                    it.height = buttonSize
+                    it
+                }
         }
         prefs.getString("time_fontsize", "12")?.toIntOrNull()?.let { size ->
             binding.timePositionText.setTextSize(TypedValue.COMPLEX_UNIT_SP, size.toFloat())
             binding.timeDurationText.setTextSize(TypedValue.COMPLEX_UNIT_SP, size.toFloat())
+        }
+        prefs.getString("view_opacity", "0.7")?.toFloatOrNull()?.let { size ->
+            binding.backgroundImage.alpha = min(1.0f, max(0.0f, size))
+        }
+        prefs.getString("top_button_opacity", "1.0")?.toFloatOrNull()?.let { size ->
+            binding.launchButton.alpha = min(1.0f, max(0.0f, size))
+            binding.settingButton.alpha = min(1.0f, max(0.0f, size))
+            binding.closeButton.alpha = min(1.0f, max(0.0f, size))
         }
     }
 
@@ -587,13 +618,11 @@ class FloatingControlService : NotificationListenerService(), LifecycleOwner,
             binding.timeDurationText.visibility = View.VISIBLE
             binding.prevButton.visibility = View.VISIBLE
             binding.nextButton.visibility = View.VISIBLE
-            binding.settingButton.visibility = View.VISIBLE
         } else {
             binding.prevButton.visibility = if (widthDP >= 120) View.VISIBLE else View.GONE
             binding.nextButton.visibility = if (widthDP >= 120) View.VISIBLE else View.GONE
             binding.timePositionText.visibility = View.GONE
             binding.timeDurationText.visibility = View.GONE
-            binding.settingButton.visibility = View.GONE
         }
         if (heightDP >= 120) {
             binding.artistText.maxLines = 2
