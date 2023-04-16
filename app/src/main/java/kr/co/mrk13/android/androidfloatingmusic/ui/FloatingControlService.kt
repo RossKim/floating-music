@@ -806,6 +806,7 @@ class FloatingControlService : NotificationListenerService(), LifecycleOwner,
                                     resizeMode = null
                                 }
                             }
+
                             MotionEvent.ACTION_MOVE -> {
                                 when (resizeMode) {
                                     ResizeMode.BottomRight -> {
@@ -820,6 +821,7 @@ class FloatingControlService : NotificationListenerService(), LifecycleOwner,
                                                 (moveHeight + event.rawY - movePy)
                                             ).toInt()
                                     }
+
                                     ResizeMode.BottomLeft -> {
                                         it.width =
                                             max(
@@ -832,6 +834,7 @@ class FloatingControlService : NotificationListenerService(), LifecycleOwner,
                                                 (moveHeight + movePy - event.rawY)
                                             ).toInt()
                                     }
+
                                     null -> {
                                         it.x = (moveX + event.rawX - movePx).toInt()
                                         it.y = (moveY + event.rawY - movePy).toInt()
@@ -842,6 +845,7 @@ class FloatingControlService : NotificationListenerService(), LifecycleOwner,
                                     windowManager?.updateViewLayout(view, it)
                                 }
                             }
+
                             MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
                                 resizeMode = null
 
@@ -850,6 +854,7 @@ class FloatingControlService : NotificationListenerService(), LifecycleOwner,
                                 pref.putString(Constant.prefWindowPosition, rect.flattenToString())
                                 pref.apply()
                             }
+
                             else -> {
 
                             }

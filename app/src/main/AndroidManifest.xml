@@ -15,6 +15,7 @@
         <package android:name="skplanet.musicmate" />
         <package android:name="com.naver.vibe" />
         <package android:name="com.google.android.youtube" />
+        <package android:name="com.apple.android.music" />
     </queries>
 
     <application
