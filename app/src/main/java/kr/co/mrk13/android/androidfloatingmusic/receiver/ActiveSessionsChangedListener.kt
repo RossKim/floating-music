@@ -11,6 +11,7 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.util.LruCache
 import kr.co.mrk13.android.androidfloatingmusic.constant.MediaApp
 import kr.co.mrk13.android.androidfloatingmusic.model.MusicData
 import kr.co.mrk13.android.androidfloatingmusic.ui.MusicDataViewModel
@@ -30,6 +31,14 @@ class ActiveSessionsChangedListener(
             Handler.createAsync(Looper.getMainLooper())
         } else {
             Handler(Looper.getMainLooper())
+        }
+    }
+
+    private val mediaDurationCache: LruCache<String, Long> by lazy {
+        object : LruCache<String, Long>(100) {
+            override fun sizeOf(key: String?, value: Long?): Int {
+                return 1
+            }
         }
     }
 
@@ -185,13 +194,23 @@ class ActiveSessionsChangedListener(
                 metadata.getBitmap(MediaMetadata.METADATA_KEY_ALBUM_ART)
             )
         }
+        val mediaId = metadata.getString(MediaMetadata.METADATA_KEY_MEDIA_ID)
+        val duration =
+            metadata.getLong(MediaMetadata.METADATA_KEY_DURATION).takeIf { it > 0 }?.let {
+                mediaId?.let { id ->
+                    mediaDurationCache.put(id, it)
+                }
+                it
+            } ?: mediaId?.let { id ->
+                mediaDurationCache.get(id)
+            } ?: 0L
         val data = MusicData(
             app,
             controller.packageName,
             metadata.getString(MediaMetadata.METADATA_KEY_ARTIST),
             metadata.getString(MediaMetadata.METADATA_KEY_TITLE),
             metadata.getString(MediaMetadata.METADATA_KEY_ALBUM),
-            metadata.getLong(MediaMetadata.METADATA_KEY_DURATION),
+            duration,
             art,
             -1,
             false
