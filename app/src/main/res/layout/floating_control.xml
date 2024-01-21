@@ -37,26 +37,30 @@
                 android:layout_height="wrap_content"
                 android:orientation="vertical">
 
-                <TextView
+                <androidx.appcompat.widget.AppCompatTextView
                     android:id="@+id/artist_text"
                     style="@style/Theme.AndroidFloatingMusic.Text"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:ellipsize="end"
+                    android:marqueeRepeatLimit="marquee_forever"
+                    android:singleLine="true"
+                    android:ellipsize="marquee"
+                    android:maxLines="1"
                     android:gravity="center"
-                    android:maxLines="2"
                     android:minHeight="16dp"
                     android:padding="4dp"
                     android:text="@string/msg_need_to_play" />
 
-                <TextView
+                <androidx.appcompat.widget.AppCompatTextView
                     android:id="@+id/song_text"
                     style="@style/Theme.AndroidFloatingMusic.Text"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:ellipsize="end"
+                    android:marqueeRepeatLimit="marquee_forever"
+                    android:singleLine="true"
+                    android:ellipsize="marquee"
+                    android:maxLines="1"
                     android:gravity="center"
-                    android:maxLines="2"
                     android:minHeight="16dp"
                     android:padding="4dp" />
 

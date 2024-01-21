@@ -215,9 +215,8 @@ class FloatingControlService : NotificationListenerService(), LifecycleOwner,
         clear()
     }
 
-    override fun getLifecycle(): Lifecycle {
-        return lifecycleRegistry
-    }
+    override val lifecycle: Lifecycle
+        get() = lifecycleRegistry
 
     private fun initWindow() {
         // The screen height and width are calculated, cause
@@ -439,6 +438,11 @@ class FloatingControlService : NotificationListenerService(), LifecycleOwner,
 
     @SuppressLint("ClickableViewAccessibility")
     private fun initUI() {
+        binding.artistText.setHorizontallyScrolling(true)
+        binding.artistText.isSelected = true
+        binding.songText.setHorizontallyScrolling(true)
+        binding.songText.isSelected = true
+
         binding.closeButton.setOnTouchListener(object : View.OnTouchListener {
             private val gestureDetector = GestureDetector(
                 this@FloatingControlService,
@@ -612,7 +616,7 @@ class FloatingControlService : NotificationListenerService(), LifecycleOwner,
 
     private fun setUIVisibility(width: Int, height: Int) {
         val widthDP = convertPx2Dp(width, this)
-        val heightDP = convertPx2Dp(height, this)
+//        val heightDP = convertPx2Dp(height, this)
         if (widthDP >= 150) {
             binding.timePositionText.visibility = View.VISIBLE
             binding.timeDurationText.visibility = View.VISIBLE
@@ -623,13 +627,6 @@ class FloatingControlService : NotificationListenerService(), LifecycleOwner,
             binding.nextButton.visibility = if (widthDP >= 120) View.VISIBLE else View.GONE
             binding.timePositionText.visibility = View.GONE
             binding.timeDurationText.visibility = View.GONE
-        }
-        if (heightDP >= 120) {
-            binding.artistText.maxLines = 2
-            binding.songText.maxLines = 2
-        } else {
-            binding.artistText.maxLines = 1
-            binding.songText.maxLines = 1
         }
     }
 
