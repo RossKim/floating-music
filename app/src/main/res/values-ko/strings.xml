@@ -30,4 +30,8 @@
     <string name="pref_button_opacity_message">상단 버튼의 투명도를 변경할 수 있습니다.</string>
     <string name="pref_support_title">후원</string>
     <string name="pref_support_message">개발자에게 커피 한 잔 후원할 수 있습니다.</string>
+    <string name="pref_button_size_title">버튼 사이즈</string>
+    <string name="pref_button_size_message">재생, 앞뒤 버튼의 사이즈를 변경할 수 있습니다.</string>
+    <string name="pref_show_album_title">앨범명 표시</string>
+    <string name="pref_show_album_message">ON: 앨범명 표시, OFF: 앨범명 비표시</string>
 </resources>

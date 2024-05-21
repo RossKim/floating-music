@@ -30,4 +30,8 @@
     <string name="pref_button_opacity_message">Adjust opacity of the top buttons.</string>
     <string name="pref_support_title">Support</string>
     <string name="pref_support_message">Buy a coffee to developer.</string>
+    <string name="pref_button_size_title">Button size</string>
+    <string name="pref_button_size_message">Adjust button size of play, prev, forward buttons.</string>
+    <string name="pref_show_album_title">Display album title</string>
+    <string name="pref_show_album_message">ON for displaying album title, or OFF</string>
 </resources>

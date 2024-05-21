@@ -35,4 +35,78 @@
         <item>0.9</item>
         <item>1.0</item>
     </string-array>
+    <string-array name="buttonsize">
+        <item>20dp</item>
+        <item>21dp</item>
+        <item>22dp</item>
+        <item>23dp</item>
+        <item>24dp</item>
+        <item>25dp</item>
+        <item>26dp</item>
+        <item>27dp</item>
+        <item>28dp</item>
+        <item>29dp</item>
+        <item>30dp</item>
+        <item>31dp</item>
+        <item>32dp</item>
+        <item>33dp</item>
+        <item>34dp</item>
+        <item>35dp</item>
+        <item>36dp</item>
+        <item>37dp</item>
+        <item>38dp</item>
+        <item>39dp</item>
+        <item>40dp</item>
+        <item>41dp</item>
+        <item>42dp</item>
+        <item>43dp</item>
+        <item>44dp</item>
+        <item>45dp</item>
+        <item>46dp</item>
+        <item>47dp</item>
+        <item>48dp</item>
+        <item>49dp</item>
+        <item>50dp</item>
+    </string-array>
+    <string-array name="buttonsize_value">
+        <item>20</item>
+        <item>21</item>
+        <item>22</item>
+        <item>23</item>
+        <item>24</item>
+        <item>25</item>
+        <item>26</item>
+        <item>27</item>
+        <item>28</item>
+        <item>29</item>
+        <item>30</item>
+        <item>31</item>
+        <item>32</item>
+        <item>33</item>
+        <item>34</item>
+        <item>35</item>
+        <item>36</item>
+        <item>37</item>
+        <item>38</item>
+        <item>39</item>
+        <item>40</item>
+        <item>41</item>
+        <item>42</item>
+        <item>43</item>
+        <item>44</item>
+        <item>45</item>
+        <item>46</item>
+        <item>47</item>
+        <item>48</item>
+        <item>49</item>
+        <item>50</item>
+    </string-array>
+    <string-array name="on_value">
+        <item>ON</item>
+        <item>OFF</item>
+    </string-array>
+    <string-array name="boolean_value">
+        <item>1</item>
+        <item>0</item>
+    </string-array>
 </resources>

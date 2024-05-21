@@ -285,7 +285,7 @@ class FloatingControlService : NotificationListenerService(), LifecycleOwner,
                 convertDp2Px(Constant.controlWindowDefaultSize, applicationContext),
                 width * 0.3f
             ),
-            convertDp2Px(Constant.controlWindowMinimumSize, applicationContext)
+            convertDp2Px(Constant.controlWindowMinimumWidth, applicationContext)
         ).toInt()
         var windowHeight = windowWidth
         var posX = 0
@@ -419,7 +419,7 @@ class FloatingControlService : NotificationListenerService(), LifecycleOwner,
                 }
                 sharedPreferences?.let { prefs ->
                     when (key) {
-                        "title_fontsize", "time_fontsize", "view_opacity", "top_button_opacity" -> {
+                        "title_fontsize", "button_size", "show_album", "time_fontsize", "view_opacity", "top_button_opacity" -> {
                             setPreferencesToUI(prefs)
                         }
                     }
@@ -442,6 +442,8 @@ class FloatingControlService : NotificationListenerService(), LifecycleOwner,
         binding.artistText.isSelected = true
         binding.songText.setHorizontallyScrolling(true)
         binding.songText.isSelected = true
+        binding.albumTitle.setHorizontallyScrolling(true)
+        binding.albumTitle.isSelected = true
 
         binding.closeButton.setOnTouchListener(object : View.OnTouchListener {
             private val gestureDetector = GestureDetector(
@@ -513,19 +515,10 @@ class FloatingControlService : NotificationListenerService(), LifecycleOwner,
                     if (intent == null) {
                         val mainIntent = Intent()
                         mainIntent.setPackage(packageName)
-                        val appList = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                            packageManager.queryIntentActivities(
-                                mainIntent, PackageManager.ResolveInfoFlags.of(
-                                    PackageManager.MATCH_ALL.toLong()
-                                )
-                            )
-                        } else {
-                            @Suppress("DEPRECATION")
-                            packageManager.queryIntentActivities(
-                                mainIntent,
-                                PackageManager.MATCH_ALL
-                            )
-                        }
+                        val appList = packageManager.queryIntentActivities(
+                            mainIntent,
+                            PackageManager.MATCH_ALL
+                        )
                         appList.firstOrNull()?.let {
                             val activity = it.activityInfo
                             val name = ComponentName(
@@ -578,9 +571,15 @@ class FloatingControlService : NotificationListenerService(), LifecycleOwner,
         prefs.getString("title_fontsize", "12")?.toIntOrNull()?.let { size ->
             binding.artistText.setTextSize(TypedValue.COMPLEX_UNIT_SP, size.toFloat())
             binding.songText.setTextSize(TypedValue.COMPLEX_UNIT_SP, size.toFloat())
-
-            val buttonSize = (resources.getDimensionPixelSize(R.dimen.control_button_size)
-                .toDouble() * size.toDouble() / 12.0).toInt()
+            binding.albumTitle.setTextSize(TypedValue.COMPLEX_UNIT_SP, size.toFloat())
+        }
+        prefs.getString("button_size", "30")?.toIntOrNull()?.let { size ->
+            val buttonSize = convertDp2Px(size, this).toInt()
+            binding.buttonLayout.layoutParams =
+                (binding.buttonLayout.layoutParams as? LinearLayout.LayoutParams)?.let {
+                    it.height = buttonSize
+                    it
+                }
             binding.playButton.layoutParams =
                 (binding.playButton.layoutParams as? RelativeLayout.LayoutParams)?.let {
                     it.width = buttonSize
@@ -612,22 +611,23 @@ class FloatingControlService : NotificationListenerService(), LifecycleOwner,
             binding.settingButton.alpha = min(1.0f, max(0.0f, size))
             binding.closeButton.alpha = min(1.0f, max(0.0f, size))
         }
+        prefs.getString("show_album", "1")?.toIntOrNull()?.let { flag ->
+            binding.albumTitle.tag = flag == 1
+            if (binding.albumTitle.visibility == View.VISIBLE && flag != 1) {
+                binding.albumTitle.visibility = View.GONE
+            } else if (binding.albumTitle.visibility == View.GONE && flag == 1 && !binding.albumTitle.text.isNullOrEmpty()) {
+                binding.albumTitle.visibility = View.VISIBLE
+            }
+        }
     }
 
     private fun setUIVisibility(width: Int, height: Int) {
         val widthDP = convertPx2Dp(width, this)
 //        val heightDP = convertPx2Dp(height, this)
-        if (widthDP >= 150) {
-            binding.timePositionText.visibility = View.VISIBLE
-            binding.timeDurationText.visibility = View.VISIBLE
-            binding.prevButton.visibility = View.VISIBLE
-            binding.nextButton.visibility = View.VISIBLE
-        } else {
-            binding.prevButton.visibility = if (widthDP >= 120) View.VISIBLE else View.GONE
-            binding.nextButton.visibility = if (widthDP >= 120) View.VISIBLE else View.GONE
-            binding.timePositionText.visibility = View.GONE
-            binding.timeDurationText.visibility = View.GONE
-        }
+        binding.timePositionText.visibility = View.VISIBLE
+        binding.timeDurationText.visibility = View.VISIBLE
+        binding.prevButton.visibility = View.VISIBLE
+        binding.nextButton.visibility = View.VISIBLE
     }
 
     private val sessionComponentName: ComponentName
@@ -663,9 +663,14 @@ class FloatingControlService : NotificationListenerService(), LifecycleOwner,
             if (data.initData) {
                 binding.artistText.text = getString(R.string.msg_need_to_play)
                 binding.songText.text = null
+                binding.albumTitle.text = null
+                binding.albumTitle.visibility = View.GONE
             } else {
                 binding.artistText.text = data.artistName
                 binding.songText.text = data.trackTitle
+                binding.albumTitle.text = data.albumTitle
+                binding.albumTitle.visibility =
+                    if (data.albumTitle.isNullOrEmpty() || binding.albumTitle.tag as? Boolean == false) View.GONE else View.VISIBLE
             }
             binding.timeDurationText.text = positionToText(data.duration)
             data.albumUrl?.let { pair ->
@@ -774,7 +779,9 @@ class FloatingControlService : NotificationListenerService(), LifecycleOwner,
             private val resizeThreshold =
                 convertDp2Px(Constant.resizeThreshold, this@FloatingControlService)
             private val minimumWidth =
-                convertDp2Px(Constant.controlWindowMinimumSize, this@FloatingControlService)
+                convertDp2Px(Constant.controlWindowMinimumWidth, this@FloatingControlService)
+            private val minimumHeight =
+                convertDp2Px(Constant.controlWindowMinimumHeight, this@FloatingControlService)
 
             @SuppressLint("ClickableViewAccessibility")
             override fun onTouch(v: View?, event: MotionEvent?): Boolean {
@@ -814,7 +821,7 @@ class FloatingControlService : NotificationListenerService(), LifecycleOwner,
                                             ).toInt()
                                         it.height =
                                             max(
-                                                minimumWidth,
+                                                minimumHeight,
                                                 (moveHeight + event.rawY - movePy)
                                             ).toInt()
                                     }
@@ -827,7 +834,7 @@ class FloatingControlService : NotificationListenerService(), LifecycleOwner,
                                             ).toInt()
                                         it.height =
                                             max(
-                                                minimumWidth,
+                                                minimumHeight,
                                                 (moveHeight + movePy - event.rawY)
                                             ).toInt()
                                     }
