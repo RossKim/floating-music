@@ -22,6 +22,42 @@
         <item>17</item>
         <item>18</item>
     </string-array>
+    <string-array name="clock_fontsize">
+        <item>10pt</item>
+        <item>12pt</item>
+        <item>14pt</item>
+        <item>16pt</item>
+        <item>18pt</item>
+        <item>20pt</item>
+        <item>22pt</item>
+        <item>24pt</item>
+        <item>26pt</item>
+        <item>28pt</item>
+        <item>30pt</item>
+        <item>32pt</item>
+        <item>34pt</item>
+        <item>36pt</item>
+        <item>38pt</item>
+        <item>40pt</item>
+    </string-array>
+    <string-array name="clock_fontsize_value">
+        <item>10</item>
+        <item>12</item>
+        <item>14</item>
+        <item>16</item>
+        <item>18</item>
+        <item>20</item>
+        <item>22</item>
+        <item>24</item>
+        <item>26</item>
+        <item>28</item>
+        <item>30</item>
+        <item>32</item>
+        <item>34</item>
+        <item>36</item>
+        <item>38</item>
+        <item>40</item>
+    </string-array>
     <string-array name="opacity_value">
         <item>0.0</item>
         <item>0.1</item>

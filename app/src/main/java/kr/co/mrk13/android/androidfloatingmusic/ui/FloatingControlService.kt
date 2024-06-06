@@ -419,7 +419,7 @@ class FloatingControlService : NotificationListenerService(), LifecycleOwner,
                 }
                 sharedPreferences?.let { prefs ->
                     when (key) {
-                        "title_fontsize", "button_size", "show_album", "time_fontsize", "view_opacity", "top_button_opacity" -> {
+                        "title_fontsize", "button_size", "show_album", "time_fontsize", "view_opacity", "top_button_opacity", "show_clock", "clock_fontsize" -> {
                             setPreferencesToUI(prefs)
                         }
                     }
@@ -552,6 +552,8 @@ class FloatingControlService : NotificationListenerService(), LifecycleOwner,
         binding.prevButton.setOnClickListener {
             sendCommand(MediaCommand.PREVIOUS)
         }
+        binding.clockView.format12Hour = null
+        binding.clockView.format24Hour = "kk:mm"
 
         // Another feature of the floating window is, the window is movable.
         // The window can be moved at any position on the screen.
@@ -561,7 +563,6 @@ class FloatingControlService : NotificationListenerService(), LifecycleOwner,
         floatView?.setOnTouchListener(windowTouch)
 
         floatView?.addOnLayoutChangeListener(windowLayoutChange)
-
 
         val prefs = PreferenceManager.getDefaultSharedPreferences(this)
         setPreferencesToUI(prefs)
@@ -618,6 +619,12 @@ class FloatingControlService : NotificationListenerService(), LifecycleOwner,
             } else if (binding.albumTitle.visibility == View.GONE && flag == 1 && !binding.albumTitle.text.isNullOrEmpty()) {
                 binding.albumTitle.visibility = View.VISIBLE
             }
+        }
+        prefs.getString("show_clock", "0")?.toIntOrNull()?.let { flag ->
+            binding.clockView.visibility = if (flag == 1) View.VISIBLE else View.GONE
+        }
+        prefs.getString("clock_fontsize", "20")?.toIntOrNull()?.let { size ->
+            binding.clockView.setTextSize(TypedValue.COMPLEX_UNIT_SP, size.toFloat())
         }
     }
 

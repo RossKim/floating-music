@@ -34,4 +34,8 @@
     <string name="pref_button_size_message">Adjust button size of play, prev, forward buttons.</string>
     <string name="pref_show_album_title">Display album title</string>
     <string name="pref_show_album_message">ON for displaying album title, or OFF</string>
+    <string name="pref_show_clock_title">Display clock</string>
+    <string name="pref_show_clock_message">ON for displaying clock, or OFF</string>
+    <string name="pref_clock_size_title">Clock text size</string>
+    <string name="pref_clock_size_message">Adjust text size of the clock.</string>
 </resources>
