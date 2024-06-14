@@ -625,20 +625,23 @@ class FloatingControlService : NotificationListenerService(), LifecycleOwner,
         }
         prefs.getString("clock_fontsize", "20")?.toIntOrNull()?.let { size ->
             binding.clockView.setTextSize(TypedValue.COMPLEX_UNIT_SP, size.toFloat())
-            val weakSelf = WeakReference(this)
+            val weakSelf = WeakReference(this@FloatingControlService)
             handler.postDelayed({
                 weakSelf.get()?.let {
-                    val height =
-                        if (it.binding.clockView.visibility == View.VISIBLE) max(
+                    try {
+                        val height =
+                            if (it.binding.clockView.visibility == View.VISIBLE) max(
+                                0,
+                                it.binding.clockView.height - convertDp2Px(15, it).toInt()
+                            ) else 0
+                        it.binding.centerLayout.setPadding(
                             0,
-                            it.binding.clockView.height - convertDp2Px(15, it).toInt()
-                        ) else 0
-                    it.binding.centerLayout.setPadding(
-                        0,
-                        height,
-                        0,
-                        height
-                    )
+                            height,
+                            0,
+                            height
+                        )
+                    } catch (ignore: Throwable) {
+                    }
                 }
             }, 500L)
         }
