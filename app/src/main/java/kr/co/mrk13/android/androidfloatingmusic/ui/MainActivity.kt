@@ -3,7 +3,6 @@ package kr.co.mrk13.android.androidfloatingmusic.ui
 import android.content.Context
 import android.content.Intent
 import android.graphics.PixelFormat
-import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
@@ -17,6 +16,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
+import androidx.core.net.toUri
 import kr.co.mrk13.android.androidfloatingmusic.R
 import kr.co.mrk13.android.androidfloatingmusic.databinding.ActivityMainBinding
 import kr.co.mrk13.android.androidfloatingmusic.util.isServiceRunning
@@ -127,7 +127,7 @@ class MainActivity : AppCompatActivity() {
             // redirecting to an other app(Settings).
             val intent = Intent(
                 Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                Uri.parse("package:$packageName")
+                "package:$packageName".toUri()
             )
             permissionLauncher.launch(intent)
         }

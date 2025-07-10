@@ -6,6 +6,8 @@ import android.graphics.Path
 import android.graphics.RectF
 import android.util.AttributeSet
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.content.withStyledAttributes
+import androidx.core.graphics.withClip
 import kr.co.mrk13.android.androidfloatingmusic.R
 
 /**
@@ -19,9 +21,9 @@ class RoundedConstraintLayout(context: Context, attrs: AttributeSet) :
     private var cornerRadius = 0f
 
     init {
-        val ta = getContext().obtainStyledAttributes(attrs, R.styleable.RoundedConstraintLayout)
-        cornerRadius = ta.getFloat(R.styleable.RoundedConstraintLayout_appCornerRadius, 0f)
-        ta.recycle()
+        getContext().withStyledAttributes(attrs, R.styleable.RoundedConstraintLayout) {
+            cornerRadius = getFloat(R.styleable.RoundedConstraintLayout_appCornerRadius, 0f)
+        }
     }
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
@@ -31,17 +33,15 @@ class RoundedConstraintLayout(context: Context, attrs: AttributeSet) :
     }
 
     override fun draw(canvas: Canvas) {
-        val save = canvas.save()
-        canvas.clipPath(path)
-        super.draw(canvas)
-        canvas.restoreToCount(save)
+        canvas.withClip(path) {
+            super.draw(canvas)
+        }
     }
 
     override fun dispatchDraw(canvas: Canvas) {
-        val save = canvas.save()
-        canvas.clipPath(path)
-        super.dispatchDraw(canvas)
-        canvas.restoreToCount(save)
+        canvas.withClip(path) {
+            super.dispatchDraw(canvas)
+        }
     }
 
     private fun resetPath() {

@@ -133,8 +133,8 @@ class ActiveSessionsChangedListener(
         super.onExtrasChanged(extras)
     }
 
-    override fun onAudioInfoChanged(info: MediaController.PlaybackInfo?) {
-        super.onAudioInfoChanged(info)
+    override fun onAudioInfoChanged(playbackInfo: MediaController.PlaybackInfo) {
+        super.onAudioInfoChanged(playbackInfo)
     }
 
     private val inState: Array<Int> = arrayOf(
@@ -159,7 +159,7 @@ class ActiveSessionsChangedListener(
                 ?: hasTitleControllers.firstOrNull()
         mainHandler.post {
             controller?.let { con ->
-                val app = MediaApp.values().firstOrNull { it.packageName == con.packageName }
+                val app = MediaApp.entries.firstOrNull { it.packageName == con.packageName }
                 setController(con, app, force)
             } ?: run {
                 dataModel.musicDataChange(null)

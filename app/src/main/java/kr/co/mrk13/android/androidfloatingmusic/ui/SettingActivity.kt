@@ -1,9 +1,9 @@
 package kr.co.mrk13.android.androidfloatingmusic.ui
 
 import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.net.toUri
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import kr.co.mrk13.android.androidfloatingmusic.R
@@ -44,7 +44,7 @@ class SettingFragment : PreferenceFragmentCompat() {
 
         preferenceManager.findPreference<Preference>("support")?.setOnPreferenceClickListener {
             val intent = Intent(Intent.ACTION_VIEW)
-            intent.data = Uri.parse("https://www.buymeacoffee.com/mrk13developer")
+            intent.data = "https://www.buymeacoffee.com/mrk13developer".toUri()
             startActivity(intent)
             true
         }

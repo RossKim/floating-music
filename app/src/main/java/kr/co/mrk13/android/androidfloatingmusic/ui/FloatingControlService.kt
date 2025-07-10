@@ -37,6 +37,9 @@ import java.lang.ref.WeakReference
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
+import androidx.core.view.isVisible
+import androidx.core.view.isGone
+import androidx.core.content.edit
 
 
 enum class ResizeMode {
@@ -85,7 +88,7 @@ class FloatingControlServiceViewModel(private val app: Context) : MusicDataViewM
     init {
         pref.getString(Constant.prefPlayedPackageName, null)?.takeIf { it.isNotEmpty() }
             ?.let { packageName ->
-                val app = MediaApp.values().firstOrNull { it.packageName == packageName }
+                val app = MediaApp.entries.firstOrNull { it.packageName == packageName }
                 val data = MusicData(
                     app, packageName, null, null, null, 0L, null, 0L, false,
                     initData = true
@@ -110,9 +113,9 @@ class FloatingControlServiceViewModel(private val app: Context) : MusicDataViewM
         }
 
         data?.takeIf { it.playing }?.packageName?.let {
-            val pref = this.pref.edit()
-            pref.putString(Constant.prefPlayedPackageName, it)
-            pref.apply()
+            this.pref.edit {
+                putString(Constant.prefPlayedPackageName, it)
+            }
         }
     }
 
@@ -488,8 +491,11 @@ class FloatingControlService : NotificationListenerService(), LifecycleOwner,
                         val weak = WeakReference(this@FloatingControlService)
                         handler.postDelayed({
                             weak.get()?.let {
-                                if (it.isForeground) {
-                                    it.binding.root.visibility = View.VISIBLE
+                                try {
+                                    if (it.isForeground) {
+                                        it.binding.root.visibility = View.VISIBLE
+                                    }
+                                } catch (ignore: Throwable) {
                                 }
                             }
                         }, 60 * 1000L)
@@ -614,9 +620,9 @@ class FloatingControlService : NotificationListenerService(), LifecycleOwner,
         }
         prefs.getString("show_album", "1")?.toIntOrNull()?.let { flag ->
             binding.albumTitle.tag = flag == 1
-            if (binding.albumTitle.visibility == View.VISIBLE && flag != 1) {
+            if (binding.albumTitle.isVisible && flag != 1) {
                 binding.albumTitle.visibility = View.GONE
-            } else if (binding.albumTitle.visibility == View.GONE && flag == 1 && !binding.albumTitle.text.isNullOrEmpty()) {
+            } else if (binding.albumTitle.isGone && flag == 1 && !binding.albumTitle.text.isNullOrEmpty()) {
                 binding.albumTitle.visibility = View.VISIBLE
             }
         }
@@ -630,7 +636,7 @@ class FloatingControlService : NotificationListenerService(), LifecycleOwner,
                 weakSelf.get()?.let {
                     try {
                         val height =
-                            if (it.binding.clockView.visibility == View.VISIBLE) max(
+                            if (it.binding.clockView.isVisible) max(
                                 0,
                                 it.binding.clockView.height - convertDp2Px(15, it).toInt()
                             ) else 0
@@ -722,7 +728,7 @@ class FloatingControlService : NotificationListenerService(), LifecycleOwner,
                 Glide.with(this).clear(binding.backgroundImage)
             }
             binding.launchButton.visibility = data.packageName?.takeIf { name ->
-                MediaApp.values().firstOrNull { it.packageName == name } != null
+                MediaApp.entries.firstOrNull { it.packageName == name } != null
             }?.let {
                 View.VISIBLE
             } ?: View.GONE
