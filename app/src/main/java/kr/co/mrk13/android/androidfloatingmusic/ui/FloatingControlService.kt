@@ -20,6 +20,9 @@ import android.view.*
 import android.widget.LinearLayout
 import android.widget.RelativeLayout
 import androidx.core.app.NotificationCompat
+import androidx.core.content.edit
+import androidx.core.view.isGone
+import androidx.core.view.isVisible
 import androidx.lifecycle.*
 import androidx.preference.PreferenceManager
 import com.bumptech.glide.Glide
@@ -37,9 +40,6 @@ import java.lang.ref.WeakReference
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
-import androidx.core.view.isVisible
-import androidx.core.view.isGone
-import androidx.core.content.edit
 
 
 enum class ResizeMode {
