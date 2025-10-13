@@ -72,10 +72,4 @@
         android:positiveButtonText="@null"
         android:summary="@string/pref_clock_size_message"
         android:title="@string/pref_clock_size_title" />
-    <androidx.preference.Preference
-        android:key="support"
-        android:negativeButtonText="@null"
-        android:positiveButtonText="@null"
-        android:summary="@string/pref_support_message"
-        android:title="@string/pref_support_title" />
 </androidx.preference.PreferenceScreen>
