@@ -20,6 +20,7 @@
         <package android:name="com.ktmusic.geniemusic" />
         <package android:name="com.google.android.apps.youtube.music" />
         <package android:name="com.extreamsd.usbaudioplayerpro" />
+        <package android:name="com.spotify.music" />
     </queries>
 
     <application

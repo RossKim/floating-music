@@ -38,5 +38,6 @@ enum class MediaApp(val packageName: String) {
     AppleMusic("com.apple.android.music"),
     Genie("com.ktmusic.geniemusic"),
     YoutubeMusic("com.google.android.apps.youtube.music"),
-    UAPP("com.extreamsd.usbaudioplayerpro")
+    UAPP("com.extreamsd.usbaudioplayerpro"),
+    Spotify("com.spotify.music")
 }
