@@ -150,7 +150,7 @@ class ActiveSessionsChangedListener(
             ?: "no con")
         val existPackage = dataModel.musicData?.packageName
         val hasTitleControllers = controllers?.filter {
-            !(it.metadata?.getString(MediaMetadata.METADATA_KEY_TITLE).isNullOrEmpty())
+            !(it.metadata?.getStringOptional(MediaMetadata.METADATA_KEY_TITLE).isNullOrEmpty())
         } ?: listOf()
         val controller =
             hasTitleControllers.firstOrNull { inState.contains(it.playbackState?.state ?: 0) }
@@ -168,9 +168,10 @@ class ActiveSessionsChangedListener(
     }
 
     private fun setController(controller: MediaController, app: MediaApp?, force: Boolean) {
-        if (force || dataModel.musicData?.packageName != controller.packageName || dataModel.musicData?.trackTitle != controller.metadata?.getString(
-                MediaMetadata.METADATA_KEY_TITLE
-            ) || dataModel.musicData?.artistName != controller.metadata?.getString(MediaMetadata.METADATA_KEY_ARTIST)
+        if (force ||
+            dataModel.musicData?.packageName != controller.packageName ||
+            dataModel.musicData?.trackTitle != controller.metadata?.getStringOptional(MediaMetadata.METADATA_KEY_TITLE) ||
+            dataModel.musicData?.artistName != controller.metadata?.getStringOptional(MediaMetadata.METADATA_KEY_ARTIST)
         ) {
             app?.let {
                 Log.d("app play: ${it.packageName}")
@@ -180,21 +181,21 @@ class ActiveSessionsChangedListener(
     }
 
     private fun setMetadata(controller: MediaController, app: MediaApp?, metadata: MediaMetadata?) {
-        if (metadata?.getString(MediaMetadata.METADATA_KEY_TITLE) == null) {
+        if (metadata?.getStringOptional(MediaMetadata.METADATA_KEY_TITLE) == null) {
             dataModel.musicDataChange(null)
             return
         }
         var art = Pair(
-            metadata.getString(MediaMetadata.METADATA_KEY_ART_URI),
+            metadata.getStringOptional(MediaMetadata.METADATA_KEY_ART_URI),
             metadata.getBitmap(MediaMetadata.METADATA_KEY_ART)
         )
         if (art.first == null && art.second == null) {
             art = Pair(
-                metadata.getString(MediaMetadata.METADATA_KEY_ALBUM_ART_URI),
+                metadata.getStringOptional(MediaMetadata.METADATA_KEY_ALBUM_ART_URI),
                 metadata.getBitmap(MediaMetadata.METADATA_KEY_ALBUM_ART)
             )
         }
-        val mediaId = metadata.getString(MediaMetadata.METADATA_KEY_MEDIA_ID)
+        val mediaId = metadata.getStringOptional(MediaMetadata.METADATA_KEY_MEDIA_ID)
         val duration =
             metadata.getLong(MediaMetadata.METADATA_KEY_DURATION).takeIf { it > 0 }?.let {
                 mediaId?.let { id ->
@@ -207,9 +208,9 @@ class ActiveSessionsChangedListener(
         val data = MusicData(
             app,
             controller.packageName,
-            metadata.getString(MediaMetadata.METADATA_KEY_ARTIST),
-            metadata.getString(MediaMetadata.METADATA_KEY_TITLE),
-            metadata.getString(MediaMetadata.METADATA_KEY_ALBUM),
+            metadata.getStringOptional(MediaMetadata.METADATA_KEY_ARTIST),
+            metadata.getStringOptional(MediaMetadata.METADATA_KEY_TITLE),
+            metadata.getStringOptional(MediaMetadata.METADATA_KEY_ALBUM),
             duration,
             art,
             -1,
@@ -224,4 +225,13 @@ class ActiveSessionsChangedListener(
         data.playing = (state?.state ?: 0) == PlaybackState.STATE_PLAYING
         dataModel.playingStateChange(data)
     }
+}
+
+fun MediaMetadata.getStringOptional(key: String): String? {
+    try {
+        return getString(key)
+    } catch (e: Throwable) {
+        Log.e("getString $key error", e)
+    }
+    return null
 }
