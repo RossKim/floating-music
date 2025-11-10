@@ -4,7 +4,12 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.NotificationChannel
 import android.app.NotificationManager
-import android.content.*
+import android.content.BroadcastReceiver
+import android.content.ComponentName
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
+import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.graphics.PixelFormat
@@ -16,14 +21,22 @@ import android.os.Looper
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
 import android.util.TypedValue
-import android.view.*
+import android.view.GestureDetector
+import android.view.Gravity
+import android.view.LayoutInflater
+import android.view.MotionEvent
+import android.view.View
+import android.view.ViewGroup
+import android.view.WindowManager
 import android.widget.LinearLayout
 import android.widget.RelativeLayout
 import androidx.core.app.NotificationCompat
 import androidx.core.content.edit
 import androidx.core.view.isGone
 import androidx.core.view.isVisible
-import androidx.lifecycle.*
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.LifecycleRegistry
 import androidx.preference.PreferenceManager
 import com.bumptech.glide.Glide
 import kr.co.mrk13.android.androidfloatingmusic.R
@@ -680,12 +693,21 @@ class FloatingControlService : NotificationListenerService(), LifecycleOwner,
     }
 
     private fun sendCommand(command: MediaCommand) {
-        viewModel.musicData?.getController(this, sessionComponentName)?.let {
-            when (command) {
-                MediaCommand.PLAY -> it.transportControls.play()
-                MediaCommand.PAUSE -> it.transportControls.pause()
-                MediaCommand.PREVIOUS -> it.transportControls.skipToPrevious()
-                MediaCommand.NEXT -> it.transportControls.skipToNext()
+        viewModel.musicData?.let { musicData ->
+            musicData.getController(this, sessionComponentName)?.let {
+                when (command) {
+                    MediaCommand.PLAY -> it.transportControls.play()
+                    MediaCommand.PAUSE -> it.transportControls.pause()
+                    MediaCommand.PREVIOUS -> {
+                        if (musicData.playingPosition >= Constant.previousCommansPlayingPositionThreshold) {
+                            it.transportControls.seekTo(0L)
+                        } else {
+                            it.transportControls.skipToPrevious()
+                        }
+                    }
+
+                    MediaCommand.NEXT -> it.transportControls.skipToNext()
+                }
             }
         }
     }

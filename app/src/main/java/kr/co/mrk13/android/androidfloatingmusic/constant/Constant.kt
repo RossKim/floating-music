@@ -13,6 +13,7 @@ class Constant {
         const val controlWindowMinimumHeight = 120
         const val controlWindowDefaultSize = 200
         const val resizeThreshold = 20
+        const val previousCommansPlayingPositionThreshold = 4000
 
         const val prefWindowPosition = "pref-window-pos"
         const val prefPlayedPackageName = "pref-played-package"
