@@ -10,6 +10,12 @@
         <item>16pt</item>
         <item>17pt</item>
         <item>18pt</item>
+        <item>19pt</item>
+        <item>20pt</item>
+        <item>21pt</item>
+        <item>22pt</item>
+        <item>23pt</item>
+        <item>24pt</item>
     </string-array>
     <string-array name="fontsize_value">
         <item>10</item>
@@ -21,6 +27,12 @@
         <item>16</item>
         <item>17</item>
         <item>18</item>
+        <item>19</item>
+        <item>20</item>
+        <item>21</item>
+        <item>22</item>
+        <item>23</item>
+        <item>24</item>
     </string-array>
     <string-array name="clock_fontsize">
         <item>10pt</item>
